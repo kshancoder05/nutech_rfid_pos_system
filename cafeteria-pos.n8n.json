@@ -1,0 +1,994 @@
+{
+  "name": "Cafeteria POS \u2014 RFID Allowance",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cafeteria",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "Webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -60,
+        380
+      ],
+      "webhookId": "cafeteria-pos"
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "verify",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "verify"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "purchase",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "purchase"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "topup",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "topup"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "enroll",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "enroll"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "menu",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "menu"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "Route_by_action",
+      "name": "Route by action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        160,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.airtable.com/v0/appXXXXXXXXXXXXXX/Students",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filterByFormula",
+              "value": "={{ \"{RFID UID}='\" + $('Webhook').item.json.body.rfid + \"'\" }}"
+            },
+            {
+              "name": "maxRecords",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "Find_Student_(verify)",
+      "name": "Find Student (verify)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const r = $input.first().json;\nconst rec = (r.records || [])[0];\nif(!rec) return [{ json:{ ok:false, reason:\"Card not recognized\" } }];\nconst f = rec.fields;\nreturn [{ json:{ ok:true, student:{\n  recordId: rec.id, id: f[\"Student ID\"], rfid: f[\"RFID UID\"],\n  name: f[\"Student Name\"], grade: f[\"Grade Level\"], section: f[\"Section\"],\n  balance: Number(f[\"Balance\"]||0), status: f[\"Status\"]||\"Active\"\n}}}];"
+      },
+      "id": "Build_verify_response",
+      "name": "Build verify response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "Respond_verify",
+      "name": "Respond verify",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        880,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.airtable.com/v0/appXXXXXXXXXXXXXX/Students",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filterByFormula",
+              "value": "={{ \"{RFID UID}='\" + $('Webhook').item.json.body.rfid + \"'\" }}"
+            },
+            {
+              "name": "maxRecords",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "Find_Student_(purchase)",
+      "name": "Find Student (purchase)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const r = $input.first().json;\nconst body = $('Webhook').first().json.body;\nconst rec = (r.records || [])[0];\nif(!rec) return [{ json:{ ok:false, proceed:false, reason:\"Card not recognized\" } }];\nconst f = rec.fields;\nconst bal = Number(f[\"Balance\"]||0);\nconst total = Number(body.total||0);\nconst status = f[\"Status\"]||\"Active\";\nif(status !== \"Active\") return [{ json:{ ok:false, proceed:false, reason:\"Card is \"+status } }];\nif(bal < total) return [{ json:{ ok:false, proceed:false, reason:\"Insufficient balance\" } }];\nconst after = bal - total;\nreturn [{ json:{\n  ok:true, proceed:true, recordId:rec.id, balanceAfter:after, total:total,\n  studentId:f[\"Student ID\"], studentName:f[\"Student Name\"],\n  items: JSON.stringify(body.items||[]),\n  student:{ recordId:rec.id, id:f[\"Student ID\"], rfid:f[\"RFID UID\"], name:f[\"Student Name\"],\n            grade:f[\"Grade Level\"], section:f[\"Section\"], balance:after, status:status }\n}}];"
+      },
+      "id": "Validate_purchase",
+      "name": "Validate purchase",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.proceed }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "Purchase_OK?",
+      "name": "Purchase OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        880,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.airtable.com/v0/appXXXXXXXXXXXXXX/Students/{{ $('Validate purchase').item.json.recordId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: { \"Balance\": $('Validate purchase').item.json.balanceAfter } }) }}",
+        "options": {}
+      },
+      "id": "Deduct_balance",
+      "name": "Deduct balance",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.airtable.com/v0/appXXXXXXXXXXXXXX/Transactions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: { \"Type\":\"Purchase\", \"Student ID\": $('Validate purchase').item.json.studentId, \"Student Name\": $('Validate purchase').item.json.studentName, \"Amount\": $('Validate purchase').item.json.total, \"Items\": $('Validate purchase').item.json.items, \"Balance After\": $('Validate purchase').item.json.balanceAfter, \"By\":\"Cashier\" } }) }}",
+        "options": {}
+      },
+      "id": "Log_purchase",
+      "name": "Log purchase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"ok\": true, \"student\": $('Validate purchase').item.json.student, \"balanceAfter\": $('Validate purchase').item.json.balanceAfter, \"txnId\": $json.id } }}",
+        "options": {}
+      },
+      "id": "Respond_purchase",
+      "name": "Respond purchase",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "Respond_purchase_declined",
+      "name": "Respond purchase declined",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.airtable.com/v0/appXXXXXXXXXXXXXX/Students",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filterByFormula",
+              "value": "={{ \"{RFID UID}='\" + $('Webhook').item.json.body.rfid + \"'\" }}"
+            },
+            {
+              "name": "maxRecords",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "Find_Student_(topup)",
+      "name": "Find Student (topup)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const r = $input.first().json;\nconst body = $('Webhook').first().json.body;\nconst rec = (r.records || [])[0];\nif(!rec) return [{ json:{ ok:false, proceed:false, reason:\"Card not recognized\" } }];\nconst f = rec.fields;\nconst amount = Number(body.amount||0);\nconst after = Number(f[\"Balance\"]||0) + amount;\nreturn [{ json:{\n  ok:true, proceed:true, recordId:rec.id, balanceAfter:after, amount:amount,\n  studentId:f[\"Student ID\"], studentName:f[\"Student Name\"],\n  student:{ recordId:rec.id, id:f[\"Student ID\"], rfid:f[\"RFID UID\"], name:f[\"Student Name\"],\n            grade:f[\"Grade Level\"], section:f[\"Section\"], balance:after, status:f[\"Status\"]||\"Active\" }\n}}];"
+      },
+      "id": "Validate_topup",
+      "name": "Validate topup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.proceed }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "Topup_OK?",
+      "name": "Topup OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        880,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.airtable.com/v0/appXXXXXXXXXXXXXX/Students/{{ $('Validate topup').item.json.recordId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: { \"Balance\": $('Validate topup').item.json.balanceAfter } }) }}",
+        "options": {}
+      },
+      "id": "Add_to_balance",
+      "name": "Add to balance",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.airtable.com/v0/appXXXXXXXXXXXXXX/Transactions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: { \"Type\":\"Top-up\", \"Student ID\": $('Validate topup').item.json.studentId, \"Student Name\": $('Validate topup').item.json.studentName, \"Amount\": $('Validate topup').item.json.amount, \"Balance After\": $('Validate topup').item.json.balanceAfter, \"By\":\"Cashier\" } }) }}",
+        "options": {}
+      },
+      "id": "Log_topup",
+      "name": "Log topup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"ok\": true, \"student\": $('Validate topup').item.json.student, \"balanceAfter\": $('Validate topup').item.json.balanceAfter, \"txnId\": $json.id } }}",
+        "options": {}
+      },
+      "id": "Respond_topup",
+      "name": "Respond topup",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "Respond_topup_declined",
+      "name": "Respond topup declined",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.airtable.com/v0/appXXXXXXXXXXXXXX/Students",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filterByFormula",
+              "value": "={{ \"{Student ID}='\" + $('Webhook').item.json.body.studentId + \"'\" }}"
+            },
+            {
+              "name": "maxRecords",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "Find_Student_(enroll)",
+      "name": "Find Student (enroll)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const r = $input.first().json;\nconst rec = (r.records || [])[0];\nif(!rec) return [{ json:{ ok:false, proceed:false, reason:\"Student ID not found\" } }];\nconst f = rec.fields;\nreturn [{ json:{ ok:true, proceed:true, recordId:rec.id,\n  student:{ recordId:rec.id, id:f[\"Student ID\"], name:f[\"Student Name\"],\n            grade:f[\"Grade Level\"], section:f[\"Section\"] }\n}}];"
+      },
+      "id": "Validate_enroll",
+      "name": "Validate enroll",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.proceed }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "Enroll_OK?",
+      "name": "Enroll OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        880,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.airtable.com/v0/appXXXXXXXXXXXXXX/Students/{{ $('Validate enroll').item.json.recordId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: { \"RFID UID\": $('Webhook').item.json.body.rfid, \"Status\":\"Active\" } }) }}",
+        "options": {}
+      },
+      "id": "Write_RFID_UID",
+      "name": "Write RFID UID",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"ok\": true, \"student\": $('Validate enroll').item.json.student } }}",
+        "options": {}
+      },
+      "id": "Respond_enroll",
+      "name": "Respond enroll",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "Respond_enroll_declined",
+      "name": "Respond enroll declined",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.airtable.com/v0/appXXXXXXXXXXXXXX/Menu",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filterByFormula",
+              "value": "={{ \"{Available}=1\" }}"
+            },
+            {
+              "name": "maxRecords",
+              "value": "100"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "List_menu",
+      "name": "List menu",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        940
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const r = $input.first().json;\nconst menu = (r.records||[]).map(rec=>({\n  name: rec.fields[\"Item Name\"],\n  price: Number(rec.fields[\"Price\"]||0),\n  cat: rec.fields[\"Category\"] || \"Other\"\n}));\nreturn [{ json:{ ok:true, menu } }];"
+      },
+      "id": "Map_menu",
+      "name": "Map menu",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        940
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "Respond_menu",
+      "name": "Respond menu",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        880,
+        940
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Cafeteria POS backend\\n1. Create an **Airtable Personal Access Token** credential (scopes: data.records:read + write).\\n2. Replace **appXXXXXXXXXXXXXX** in every HTTP node URL with your Base ID.\\n3. Select the Airtable credential on each HTTP Request node.\\n4. Activate, then paste the Production webhook base URL into the POS app Settings.",
+        "height": 210,
+        "width": 380,
+        "color": 5
+      },
+      "id": "Note_setup",
+      "name": "Note setup",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "content": "One webhook `/cafeteria` receives `{ action, ... }` and the Switch routes it: verify \u00b7 purchase \u00b7 topup \u00b7 enroll \u00b7 menu.",
+        "height": 110,
+        "width": 300,
+        "color": 4
+      },
+      "id": "Note_flow",
+      "name": "Note flow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        160,
+        200
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Route by action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by action": {
+      "main": [
+        [
+          {
+            "node": "Find Student (verify)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find Student (purchase)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find Student (topup)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find Student (enroll)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "List menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Student (verify)": {
+      "main": [
+        [
+          {
+            "node": "Build verify response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build verify response": {
+      "main": [
+        [
+          {
+            "node": "Respond verify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Student (purchase)": {
+      "main": [
+        [
+          {
+            "node": "Validate purchase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate purchase": {
+      "main": [
+        [
+          {
+            "node": "Purchase OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Purchase OK?": {
+      "main": [
+        [
+          {
+            "node": "Deduct balance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond purchase declined",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deduct balance": {
+      "main": [
+        [
+          {
+            "node": "Log purchase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log purchase": {
+      "main": [
+        [
+          {
+            "node": "Respond purchase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Student (topup)": {
+      "main": [
+        [
+          {
+            "node": "Validate topup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate topup": {
+      "main": [
+        [
+          {
+            "node": "Topup OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Topup OK?": {
+      "main": [
+        [
+          {
+            "node": "Add to balance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond topup declined",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add to balance": {
+      "main": [
+        [
+          {
+            "node": "Log topup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log topup": {
+      "main": [
+        [
+          {
+            "node": "Respond topup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Student (enroll)": {
+      "main": [
+        [
+          {
+            "node": "Validate enroll",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate enroll": {
+      "main": [
+        [
+          {
+            "node": "Enroll OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enroll OK?": {
+      "main": [
+        [
+          {
+            "node": "Write RFID UID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond enroll declined",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write RFID UID": {
+      "main": [
+        [
+          {
+            "node": "Respond enroll",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List menu": {
+      "main": [
+        [
+          {
+            "node": "Map menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map menu": {
+      "main": [
+        [
+          {
+            "node": "Respond menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
