@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Cafeteria POS � Tap & Pay</title>
+<title>Cafeteria POS — Tap & Pay</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -65,7 +65,7 @@
   .card-h h2{font-family:var(--font-d);font-size:1rem;font-weight:600}
   .card-h .hint{font-size:.78rem;color:var(--muted)}
 
-  /* student / tap panel � the signature element */
+  /* student / tap panel — the signature element */
   .id-panel{padding:18px;margin-bottom:20px;min-height:150px}
   .tap-idle{display:flex;align-items:center;gap:20px;padding:16px 8px}
   .tap-graphic{
@@ -197,7 +197,7 @@
 <div class="app">
   <header class="topbar">
     <div class="brand">
-      <span class="dot">??</span>
+      <span class="dot">🍱</span>
       <span>Cafeteria POS<small>Tap &amp; pay from allowance</small></span>
     </div>
     <nav class="tabs" role="tablist">
@@ -208,7 +208,7 @@
     <div class="top-right">
       <span class="reader-pill"><span class="led"></span>Reader listening</span>
       <span class="mode-flag" id="modeFlag">Demo</span>
-      <button class="gear" id="gearBtn" title="Settings" aria-label="Settings">?</button>
+      <button class="gear" id="gearBtn" title="Settings" aria-label="Settings">⚙</button>
     </div>
   </header>
 
@@ -232,7 +232,7 @@
           <div class="card-h"><h2>Order</h2><span class="hint" id="cartCount">empty</span></div>
           <div class="cart-body" id="cartBody"></div>
           <div class="cart-foot">
-            <div class="total-row"><span class="l">Total</span><span class="v num" id="cartTotal">?0</span></div>
+            <div class="total-row"><span class="l">Total</span><span class="v num" id="cartTotal">₱0</span></div>
             <button class="btn btn-pay" id="payBtn" disabled>Tap card to charge</button>
             <button class="btn-ghost" id="clearBtn">Clear order</button>
           </div>
@@ -246,7 +246,7 @@
         <div class="card id-panel" id="loadPanel"></div>
         <div class="card panel-pad">
           <div class="fld">
-            <label for="loadAmt">Amount to add (?)</label>
+            <label for="loadAmt">Amount to add (₱)</label>
             <input id="loadAmt" class="num" type="number" min="1" inputmode="numeric" placeholder="0" />
             <div class="quick" id="loadQuick"></div>
           </div>
@@ -261,13 +261,20 @@
       <div class="narrow">
         <div class="card panel-pad">
           <div class="card-h" style="padding:0 0 14px;border:none"><h2>Link a card to a student</h2></div>
-          <div class="uid-show" id="enrollUid"><span>Scanned card UID</span>� tap a card �</div>
+          <div class="uid-show" id="enrollUid"><span>Scanned card UID</span>— tap a card —</div>
           <div class="fld">
             <label for="enrollId">Student ID</label>
             <input id="enrollId" placeholder="e.g. 2026-0418" autocomplete="off" />
           </div>
           <button class="btn btn-primary" id="enrollBtn" disabled>Scan a card to link</button>
           <p class="helper">Tap the student's new card on the reader, type their Student ID, then link. This writes the card's UID onto that student's record so future taps identify them automatically. Re-enrolling replaces a lost card.</p>
+
+          <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--line-2)">
+            <div class="tt" style="margin-bottom:4px">Fingerprint (optional second factor)</div>
+            <p class="helper" style="margin-top:0">After the card is linked, capture the student's fingerprint on the DigitalPersona 4500 to require it at checkout. <strong>Biometric data</strong> — collect written consent first.</p>
+            <button class="btn btn-primary" id="bioEnrollBtn" disabled style="margin-top:10px">Link a card first</button>
+            <p class="endpoints" id="bioEnrollResult" style="margin-top:8px"></p>
+          </div>
         </div>
       </div>
     </section>
@@ -279,18 +286,47 @@
           <div class="card-h" style="padding:0 0 16px;border:none"><h2>Settings</h2></div>
 
           <div class="toggle-row">
-            <div><div class="tt">Demo mode</div><div class="ts">Run on built-in sample data � no backend needed. Turn off to use your live n8n + Airtable.</div></div>
+            <div><div class="tt">Demo mode</div><div class="ts">Run on built-in sample data — no backend needed. Turn off to use your live n8n + Airtable.</div></div>
             <label class="switch"><input type="checkbox" id="demoToggle" checked><span class="slider"></span></label>
           </div>
 
           <div class="fld">
             <label for="n8nBase">n8n webhook base URL</label>
             <input id="n8nBase" placeholder="https://bernard100.app.n8n.cloud/webhook" />
-            <p class="helper">The app posts to <code>{base}/cafeteria</code> with a JSON body <code>{ action, ... }</code>. Actions: <code>verify</code>, <code>purchase</code>, <code>topup</code>, <code>enroll</code>, <code>menu</code>.</p>
+            <p class="helper">The app posts to <code>{base}/cafeteria</code> with a JSON body <code>{ action, ... }</code>. Actions: <code>verify</code>, <code>purchase</code>, <code>topup</code>, <code>enroll</code>, <code>menu</code>, <code>bio-enroll</code>, <code>bio-template</code>.</p>
           </div>
 
           <button class="btn btn-primary" id="testBtn" style="margin-bottom:8px">Test connection</button>
           <p class="endpoints" id="testResult"></p>
+
+          <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line-2)">
+            <div class="tt" style="margin-bottom:8px">RFID reader</div>
+            <div class="fld">
+              <label for="rfidSource">How cards are read</label>
+              <select id="rfidSource">
+                <option value="hid">USB HID reader (types UID like a keyboard)</option>
+                <option value="arduino">Arduino over USB (Web Serial)</option>
+              </select>
+            </div>
+            <div id="arduinoRow" style="display:none">
+              <button class="btn btn-primary" id="arduinoBtn" style="margin-bottom:6px">Connect Arduino</button>
+              <p class="helper" id="arduinoHint">Chrome or Edge only. Click connect, pick the Arduino's serial port, then tap cards.</p>
+            </div>
+          </div>
+
+          <div style="margin-top:6px;padding-top:18px;border-top:1px solid var(--line-2)">
+            <div class="toggle-row" style="margin-bottom:10px">
+              <div><div class="tt">Require fingerprint to pay</div><div class="ts">Confirm each purchase on the DigitalPersona 4500 after the card tap.</div></div>
+              <label class="switch"><input type="checkbox" id="fpToggle"><span class="slider"></span></label>
+            </div>
+            <div class="fld">
+              <label for="bioBridge">Fingerprint bridge URL</label>
+              <input id="bioBridge" placeholder="http://localhost:9001" />
+              <p class="helper">The local service that drives the scanner. Run <code>fingerprint-bridge</code> on the POS machine (see SETUP).</p>
+            </div>
+            <button class="btn btn-primary" id="bioTestBtn" style="margin-bottom:8px">Check scanner</button>
+            <p class="endpoints" id="bioTestResult"></p>
+          </div>
 
           <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line-2)">
             <div class="tt" style="margin-bottom:8px">Demo card UIDs (for testing)</div>
@@ -308,11 +344,15 @@
 
 <script>
 /* ============================================================
-   CONFIG  � edit these two lines when you deploy
+   CONFIG  — edit these two lines when you deploy
    ============================================================ */
 const CONFIG = {
   DEMO_MODE: true,
-  N8N_BASE: "https://bernard100.app.n8n.cloud/webhook"
+  N8N_BASE: "https://bernard100.app.n8n.cloud/webhook",
+  RFID_SOURCE: "hid",            // "hid" = USB keyboard reader · "arduino" = Web Serial
+  ARDUINO_BAUD: 115200,          // must match the Arduino sketch
+  BIO_BRIDGE: "http://localhost:9001",  // local DigitalPersona bridge service
+  REQUIRE_FP: false              // require a fingerprint to confirm a purchase
 };
 // try to restore saved settings (works once hosted; ignored if storage blocked)
 try{ const s=JSON.parse(localStorage.getItem("cafePOS")||"{}"); Object.assign(CONFIG,s);}catch(e){}
@@ -324,7 +364,7 @@ const demo = {
   students:[
     {id:"2026-0418", rfid:"0006821547", name:"Andrei Salazar",     grade:"Grade 10",        section:"St. Dominic", balance:240, status:"Active"},
     {id:"2026-0512", rfid:"0006847122", name:"Bea Maranan",        grade:"Grade 8",         section:"St. Clare",   balance:65,  status:"Active"},
-    {id:"2026-0331", rfid:"0006830944", name:"Carlo Dimaano",      grade:"Grade 11 � STEM", section:"Newton",      balance:12,  status:"Active"},
+    {id:"2026-0331", rfid:"0006830944", name:"Carlo Dimaano",      grade:"Grade 11 – STEM", section:"Newton",      balance:12,  status:"Active"},
     {id:"2026-0290", rfid:"0006851200", name:"Divine Hernandez",   grade:"Grade 7",         section:"Sampaguita",  balance:0,   status:"Lost Card"}
   ],
   menu:[
@@ -345,7 +385,7 @@ const demo = {
 };
 
 /* ============================================================
-   API layer � switches between demo and live n8n
+   API layer — switches between demo and live n8n
    Every call returns { ok, ... } or { ok:false, reason }
    ============================================================ */
 async function api(action, payload={}){
@@ -392,6 +432,17 @@ function demoApi(action, p){
       s.rfid=p.rfid;
       return {ok:true, student:s};
     }
+    case "bio-enroll":{
+      const s=findByRfid(p.rfid);
+      if(!s) return {ok:false, reason:"Card not recognized"};
+      s.bioTemplate=p.template||"DEMO_TEMPLATE"; s.bioEnrolled=true;
+      return {ok:true};
+    }
+    case "bio-template":{
+      const s=findByRfid(p.rfid);
+      if(!s) return {ok:false, reason:"Card not recognized"};
+      return {ok:true, enrolled:!!s.bioEnrolled, template:s.bioTemplate||""};
+    }
     default: return {ok:false, reason:"Unknown action"};
   }
 }
@@ -399,7 +450,7 @@ function demoApi(action, p){
 /* ============================================================
    STATE + HELPERS
    ============================================================ */
-const peso = n => "?"+Number(n).toLocaleString("en-PH");
+const peso = n => "₱"+Number(n).toLocaleString("en-PH");
 const initials = n => n.split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase();
 let MENU = [];
 let activeCat = "All";
@@ -432,10 +483,13 @@ function switchView(v){
 }
 
 /* ============================================================
-   RFID CAPTURE  � USB HID readers "type" the UID then Enter
+   RFID CAPTURE
+   Source A — USB HID readers "type" the UID then Enter
+   Source B — Arduino (RC522/PN532) over USB via Web Serial
    ============================================================ */
 let buf="", lastKey=0;
 document.addEventListener("keydown",e=>{
+  if(CONFIG.RFID_SOURCE!=="hid") return;   // ignore keyboard when using Arduino
   const el=document.activeElement, typing=el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName);
   // let the Enroll Student-ID field and number inputs receive normal typing
   if(typing && e.key!=="Enter") return;
@@ -449,6 +503,71 @@ document.addEventListener("keydown",e=>{
   }
   if(/^[0-9A-Za-z]$/.test(e.key) && !typing) buf+=e.key;
 });
+
+/* ---- Arduino over Web Serial ---- */
+let serialPort=null, serialKeepReading=false;
+async function connectArduino(){
+  if(!("serial" in navigator)){ toast("Web Serial needs Chrome or Edge", true); return; }
+  try{
+    serialPort = await navigator.serial.requestPort();
+    await serialPort.open({ baudRate: CONFIG.ARDUINO_BAUD });
+    serialKeepReading=true;
+    serialReadLoop();
+    toast("Arduino connected");
+    updateReaderPill(true);
+  }catch(e){ toast("Arduino connection cancelled", true); }
+}
+async function serialReadLoop(){
+  const dec=new TextDecoderStream();
+  const closed=serialPort.readable.pipeTo(dec.writable).catch(()=>{});
+  const reader=dec.readable.getReader();
+  let line="";
+  try{
+    while(serialKeepReading){
+      const {value,done}=await reader.read();
+      if(done) break;
+      line+=value;
+      let i;
+      while((i=line.search(/[\r\n]/))>=0){
+        const uid=line.slice(0,i).trim();
+        line=line.slice(i+1);
+        if(uid.length>=4) handleScan(uid);
+      }
+    }
+  }catch(e){}
+  finally{ reader.releaseLock(); await closed; }
+}
+function updateReaderPill(connected){
+  const pill=document.querySelector(".reader-pill");
+  if(!pill) return;
+  const label = CONFIG.RFID_SOURCE==="arduino"
+    ? (connected ? "Arduino connected" : "Arduino — not connected")
+    : "Reader listening";
+  pill.lastChild.textContent = " "+label;
+}
+
+/* ============================================================
+   FINGERPRINT — DigitalPersona 4500 via local bridge service
+   The browser cannot touch the scanner directly; the bridge
+   (fingerprint-bridge) drives the device and does the matching.
+   ============================================================ */
+async function bioStatus(){
+  try{ const r=await fetch(CONFIG.BIO_BRIDGE+"/status"); return await r.json(); }
+  catch(e){ return {ok:false, connected:false, reason:"Bridge not reachable"}; }
+}
+async function bioEnrollCapture(){
+  try{
+    const r=await fetch(CONFIG.BIO_BRIDGE+"/enroll",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"});
+    return await r.json();   // { ok, template }
+  }catch(e){ return {ok:false, reason:"Bridge not reachable"}; }
+}
+async function bioVerifyCapture(template){
+  try{
+    const r=await fetch(CONFIG.BIO_BRIDGE+"/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({template})});
+    return await r.json();   // { ok, match, score }
+  }catch(e){ return {ok:false, match:false, reason:"Bridge not reachable"}; }
+}
+
 
 function handleScan(uid){
   if(scanContext==="enroll"){
@@ -474,7 +593,7 @@ async function verifyAndShow(uid, target){
 }
 
 /* ============================================================
-   POS � student panel, menu, cart
+   POS — student panel, menu, cart
    ============================================================ */
 function renderIdPanel(){
   const el=$("#idPanel");
@@ -494,9 +613,9 @@ function studentMarkup(s){
     <div class="avatar">${initials(s.name)}</div>
     <div class="s-meta">
       <div class="name">${s.name}</div>
-      <div class="sub">${s.grade} � ${s.section}</div>
+      <div class="sub">${s.grade} · ${s.section}</div>
       <div class="id">${s.id} &nbsp;
-        <span class="chip ${bad?'warn':'ok'}">${bad?'? '+s.status:'? Active'}</span></div>
+        <span class="chip ${bad?'warn':'ok'}">${bad?'⚠ '+s.status:'● Active'}</span></div>
     </div>
     <div class="bal-box">
       <div class="lbl">Balance</div>
@@ -543,7 +662,7 @@ function renderCart(){
       <div class="line">
         <div class="nm">${c.item.name}<small>${peso(c.item.price)} each</small></div>
         <div class="stepper">
-          <button data-m="${c.item.name}">-</button>
+          <button data-m="${c.item.name}">−</button>
           <span class="q num">${c.qty}</span>
           <button data-p="${c.item.name}">+</button>
         </div>
@@ -569,10 +688,26 @@ async function doPurchase(){
   const total=cartTotal();
   const items=Object.values(cart).map(c=>({name:c.item.name,price:c.item.price,qty:c.qty}));
   $("#payBtn").disabled=true;
+
+  // optional fingerprint second factor
+  if(CONFIG.REQUIRE_FP){
+    const t=await api("bio-template",{rfid:posStudent.rfid});
+    if(t.ok && t.enrolled && t.template){
+      toast("Place finger on the scanner…");
+      const v=await bioVerifyCapture(t.template);
+      if(!v.ok || !v.match){
+        showResult(false,"Fingerprint not matched", v.reason||"Please try again");
+        refreshPay(); return;
+      }
+    }else{
+      toast("No fingerprint on file — charging by card only", true);
+    }
+  }
+
   const r=await api("purchase",{rfid:posStudent.rfid, items, total, studentName:posStudent.name});
   if(r.ok){
     if(r.balanceAfter!=null) posStudent.balance=r.balanceAfter;
-    showResult(true,"Payment received",`${total<=0?'':peso(total)+' charged"`,r.balanceAfter);
+    showResult(true,"Payment received",`${total<=0?'':peso(total)+' charged'}`,r.balanceAfter);
     cart={}; renderCart(); renderIdPanel();
   }else{
     showResult(false, r.reason||"Declined", r.reason==="Insufficient balance"
@@ -611,7 +746,7 @@ $("#loadBtn").addEventListener("click",async()=>{
     if(r.balanceAfter!=null) loadStudent.balance=r.balanceAfter;
     showResult(true,"Wallet loaded",`${peso(amt)} added`,r.balanceAfter);
     $("#loadAmt").value=""; renderLoadPanel(); refreshLoadBtn();
-  }else{ showResult(false,r.reason||"Top-up failed","" ); refreshLoadBtn(); }
+  }else{ showResult(false,r.reason||"Top-up failed",""); refreshLoadBtn(); }
 });
 
 /* ============================================================
@@ -624,16 +759,33 @@ function refreshEnrollBtn(){
   if(!id){ btn.disabled=true; btn.textContent="Enter a Student ID"; return; }
   btn.disabled=false; btn.textContent=`Link card to ${id}`;
 }
+let lastLinkedRfid="";
 $("#enrollBtn").addEventListener("click",async()=>{
   const id=$("#enrollId").value.trim();
   if(!lastUid||!id)return;
   $("#enrollBtn").disabled=true;
   const r=await api("enroll",{rfid:lastUid, studentId:id});
   if(r.ok){
-    showResult(true,"Card linked",`${r.student.name} ? ${lastUid}`);
-    lastUid=""; $("#enrollId").value=""; $("#enrollUid").innerHTML=`<span>Scanned card UID</span>� tap a card �`;
+    lastLinkedRfid=lastUid;
+    showResult(true,"Card linked",`${r.student.name} → ${lastUid}`);
+    lastUid=""; $("#enrollId").value=""; $("#enrollUid").innerHTML=`<span>Scanned card UID</span>— tap a card —`;
     refreshEnrollBtn();
-  }else{ showResult(false,r.reason||"Could not link card","" ); refreshEnrollBtn(); }
+    const b=$("#bioEnrollBtn"); b.disabled=false; b.textContent="Capture fingerprint for this card";
+  }else{ showResult(false,r.reason||"Could not link card",""); refreshEnrollBtn(); }
+});
+
+$("#bioEnrollBtn").addEventListener("click",async()=>{
+  if(!lastLinkedRfid){ return; }
+  const b=$("#bioEnrollBtn"); b.disabled=true;
+  $("#bioEnrollResult").textContent="Place finger on the scanner (4 reads)…";
+  const cap=await bioEnrollCapture();
+  if(!cap.ok || !cap.template){
+    $("#bioEnrollResult").innerHTML=`❌ ${cap.reason||"Capture failed"}`;
+    b.disabled=false; return;
+  }
+  const r=await api("bio-enroll",{rfid:lastLinkedRfid, template:cap.template});
+  $("#bioEnrollResult").innerHTML = r.ok ? "✅ Fingerprint saved for this card." : `❌ ${r.reason||"Could not save"}`;
+  b.textContent="Link a card first"; lastLinkedRfid="";
 });
 
 /* ============================================================
@@ -666,6 +818,11 @@ function toast(msg,bad){
 function syncSettingsUI(){
   $("#demoToggle").checked=CONFIG.DEMO_MODE;
   $("#n8nBase").value=CONFIG.N8N_BASE;
+  $("#rfidSource").value=CONFIG.RFID_SOURCE;
+  $("#bioBridge").value=CONFIG.BIO_BRIDGE;
+  $("#fpToggle").checked=CONFIG.REQUIRE_FP;
+  $("#arduinoRow").style.display = CONFIG.RFID_SOURCE==="arduino" ? "block" : "none";
+  updateReaderPill(false);
   const f=$("#modeFlag");
   f.textContent=CONFIG.DEMO_MODE?"Demo":"Live";
   f.className="mode-flag"+(CONFIG.DEMO_MODE?"":" live");
@@ -675,15 +832,27 @@ function saveSettings(){
 }
 $("#demoToggle").addEventListener("change",e=>{
   CONFIG.DEMO_MODE=e.target.checked; syncSettingsUI(); saveSettings(); loadMenu();
-  toast(CONFIG.DEMO_MODE?"Demo mode on":"Live mode on � using n8n");
+  toast(CONFIG.DEMO_MODE?"Demo mode on":"Live mode on — using n8n");
 });
 $("#n8nBase").addEventListener("change",e=>{ CONFIG.N8N_BASE=e.target.value.trim().replace(/\/$/,""); saveSettings(); });
+$("#rfidSource").addEventListener("change",e=>{ CONFIG.RFID_SOURCE=e.target.value; saveSettings(); syncSettingsUI(); });
+$("#arduinoBtn").addEventListener("click",connectArduino);
+$("#fpToggle").addEventListener("change",e=>{ CONFIG.REQUIRE_FP=e.target.checked; saveSettings();
+  toast(CONFIG.REQUIRE_FP?"Fingerprint required at checkout":"Fingerprint off"); });
+$("#bioBridge").addEventListener("change",e=>{ CONFIG.BIO_BRIDGE=e.target.value.trim().replace(/\/$/,""); saveSettings(); });
+$("#bioTestBtn").addEventListener("click",async()=>{
+  $("#bioTestResult").textContent="Checking scanner…";
+  const s=await bioStatus();
+  $("#bioTestResult").innerHTML = (s.ok && s.connected)
+    ? `✅ ${s.device||"Scanner"} ready.`
+    : `❌ ${s.reason||"Scanner not detected"} — is the bridge running?`;
+});
 $("#testBtn").addEventListener("click",async()=>{
-  $("#testResult").textContent="Testing�";
+  $("#testResult").textContent="Testing…";
   const r=await api("menu",{});
   $("#testResult").innerHTML = r.ok
-    ? `? Connected. Loaded ${ (r.menu||[]).length } menu items.`
-    : `? ${r.reason||"No response"}`;
+    ? `✅ Connected. Loaded ${ (r.menu||[]).length } menu items.`
+    : `❌ ${r.reason||"No response"}`;
 });
 $("#demoUids").innerHTML = demo.students.map(s=>`<code>${s.rfid}</code> ${s.name}`).join("<br>");
 
