@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Cafeteria POS ‚Äî Tap & Pay</title>
+<title>Cafeteria POS ó Tap & Pay</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -65,7 +65,7 @@
   .card-h h2{font-family:var(--font-d);font-size:1rem;font-weight:600}
   .card-h .hint{font-size:.78rem;color:var(--muted)}
 
-  /* student / tap panel ‚Äî the signature element */
+  /* student / tap panel ó the signature element */
   .id-panel{padding:18px;margin-bottom:20px;min-height:150px}
   .tap-idle{display:flex;align-items:center;gap:20px;padding:16px 8px}
   .tap-graphic{
@@ -197,7 +197,7 @@
 <div class="app">
   <header class="topbar">
     <div class="brand">
-      <span class="dot">üç±</span>
+      <span class="dot">??</span>
       <span>Cafeteria POS<small>Tap &amp; pay from allowance</small></span>
     </div>
     <nav class="tabs" role="tablist">
@@ -208,7 +208,7 @@
     <div class="top-right">
       <span class="reader-pill"><span class="led"></span>Reader listening</span>
       <span class="mode-flag" id="modeFlag">Demo</span>
-      <button class="gear" id="gearBtn" title="Settings" aria-label="Settings">‚öô</button>
+      <button class="gear" id="gearBtn" title="Settings" aria-label="Settings">?</button>
     </div>
   </header>
 
@@ -232,7 +232,7 @@
           <div class="card-h"><h2>Order</h2><span class="hint" id="cartCount">empty</span></div>
           <div class="cart-body" id="cartBody"></div>
           <div class="cart-foot">
-            <div class="total-row"><span class="l">Total</span><span class="v num" id="cartTotal">‚Ç±0</span></div>
+            <div class="total-row"><span class="l">Total</span><span class="v num" id="cartTotal">?0</span></div>
             <button class="btn btn-pay" id="payBtn" disabled>Tap card to charge</button>
             <button class="btn-ghost" id="clearBtn">Clear order</button>
           </div>
@@ -246,7 +246,7 @@
         <div class="card id-panel" id="loadPanel"></div>
         <div class="card panel-pad">
           <div class="fld">
-            <label for="loadAmt">Amount to add (‚Ç±)</label>
+            <label for="loadAmt">Amount to add (?)</label>
             <input id="loadAmt" class="num" type="number" min="1" inputmode="numeric" placeholder="0" />
             <div class="quick" id="loadQuick"></div>
           </div>
@@ -261,7 +261,7 @@
       <div class="narrow">
         <div class="card panel-pad">
           <div class="card-h" style="padding:0 0 14px;border:none"><h2>Link a card to a student</h2></div>
-          <div class="uid-show" id="enrollUid"><span>Scanned card UID</span>‚Äî tap a card ‚Äî</div>
+          <div class="uid-show" id="enrollUid"><span>Scanned card UID</span>ó tap a card ó</div>
           <div class="fld">
             <label for="enrollId">Student ID</label>
             <input id="enrollId" placeholder="e.g. 2026-0418" autocomplete="off" />
@@ -279,7 +279,7 @@
           <div class="card-h" style="padding:0 0 16px;border:none"><h2>Settings</h2></div>
 
           <div class="toggle-row">
-            <div><div class="tt">Demo mode</div><div class="ts">Run on built-in sample data ‚Äî no backend needed. Turn off to use your live n8n + Airtable.</div></div>
+            <div><div class="tt">Demo mode</div><div class="ts">Run on built-in sample data ó no backend needed. Turn off to use your live n8n + Airtable.</div></div>
             <label class="switch"><input type="checkbox" id="demoToggle" checked><span class="slider"></span></label>
           </div>
 
@@ -308,7 +308,7 @@
 
 <script>
 /* ============================================================
-   CONFIG  ‚Äî edit these two lines when you deploy
+   CONFIG  ó edit these two lines when you deploy
    ============================================================ */
 const CONFIG = {
   DEMO_MODE: true,
@@ -324,7 +324,7 @@ const demo = {
   students:[
     {id:"2026-0418", rfid:"0006821547", name:"Andrei Salazar",     grade:"Grade 10",        section:"St. Dominic", balance:240, status:"Active"},
     {id:"2026-0512", rfid:"0006847122", name:"Bea Maranan",        grade:"Grade 8",         section:"St. Clare",   balance:65,  status:"Active"},
-    {id:"2026-0331", rfid:"0006830944", name:"Carlo Dimaano",      grade:"Grade 11 ‚Äì STEM", section:"Newton",      balance:12,  status:"Active"},
+    {id:"2026-0331", rfid:"0006830944", name:"Carlo Dimaano",      grade:"Grade 11 ñ STEM", section:"Newton",      balance:12,  status:"Active"},
     {id:"2026-0290", rfid:"0006851200", name:"Divine Hernandez",   grade:"Grade 7",         section:"Sampaguita",  balance:0,   status:"Lost Card"}
   ],
   menu:[
@@ -345,7 +345,7 @@ const demo = {
 };
 
 /* ============================================================
-   API layer ‚Äî switches between demo and live n8n
+   API layer ó switches between demo and live n8n
    Every call returns { ok, ... } or { ok:false, reason }
    ============================================================ */
 async function api(action, payload={}){
@@ -399,7 +399,7 @@ function demoApi(action, p){
 /* ============================================================
    STATE + HELPERS
    ============================================================ */
-const peso = n => "‚Ç±"+Number(n).toLocaleString("en-PH");
+const peso = n => "?"+Number(n).toLocaleString("en-PH");
 const initials = n => n.split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase();
 let MENU = [];
 let activeCat = "All";
@@ -432,7 +432,7 @@ function switchView(v){
 }
 
 /* ============================================================
-   RFID CAPTURE  ‚Äî USB HID readers "type" the UID then Enter
+   RFID CAPTURE  ó USB HID readers "type" the UID then Enter
    ============================================================ */
 let buf="", lastKey=0;
 document.addEventListener("keydown",e=>{
@@ -474,7 +474,7 @@ async function verifyAndShow(uid, target){
 }
 
 /* ============================================================
-   POS ‚Äî student panel, menu, cart
+   POS ó student panel, menu, cart
    ============================================================ */
 function renderIdPanel(){
   const el=$("#idPanel");
@@ -494,9 +494,9 @@ function studentMarkup(s){
     <div class="avatar">${initials(s.name)}</div>
     <div class="s-meta">
       <div class="name">${s.name}</div>
-      <div class="sub">${s.grade} ¬∑ ${s.section}</div>
+      <div class="sub">${s.grade} ∑ ${s.section}</div>
       <div class="id">${s.id} &nbsp;
-        <span class="chip ${bad?'warn':'ok'}">${bad?'‚ö† '+s.status:'‚óè Active'}</span></div>
+        <span class="chip ${bad?'warn':'ok'}">${bad?'? '+s.status:'? Active'}</span></div>
     </div>
     <div class="bal-box">
       <div class="lbl">Balance</div>
@@ -543,7 +543,7 @@ function renderCart(){
       <div class="line">
         <div class="nm">${c.item.name}<small>${peso(c.item.price)} each</small></div>
         <div class="stepper">
-          <button data-m="${c.item.name}">‚àí</button>
+          <button data-m="${c.item.name}">-</button>
           <span class="q num">${c.qty}</span>
           <button data-p="${c.item.name}">+</button>
         </div>
@@ -569,14 +569,14 @@ async function doPurchase(){
   const total=cartTotal();
   const items=Object.values(cart).map(c=>({name:c.item.name,price:c.item.price,qty:c.qty}));
   $("#payBtn").disabled=true;
-  const r=await api("purchase",{rfid:posStudent.rfid, items, total});
+  const r=await api("purchase",{rfid:posStudent.rfid, items, total, studentName:posStudent.name});
   if(r.ok){
-    posStudent=r.student||posStudent;
-    showResult(true,"Payment received",`${total<=0?'':peso(total)+' charged'}`,r.balanceAfter);
+    if(r.balanceAfter!=null) posStudent.balance=r.balanceAfter;
+    showResult(true,"Payment received",`${total<=0?'':peso(total)+' charged"`,r.balanceAfter);
     cart={}; renderCart(); renderIdPanel();
   }else{
     showResult(false, r.reason||"Declined", r.reason==="Insufficient balance"
-      ? `Balance is ${peso((r.student||posStudent).balance)}` : "");
+      ? `Balance is ${peso(posStudent.balance)}` : "");
     refreshPay();
   }
 }
@@ -606,12 +606,12 @@ $("#loadBtn").addEventListener("click",async()=>{
   const amt=Number($("#loadAmt").value)||0;
   if(!loadStudent||amt<=0)return;
   $("#loadBtn").disabled=true;
-  const r=await api("topup",{rfid:loadStudent.rfid, amount:amt, by:"Cashier"});
+  const r=await api("topup",{rfid:loadStudent.rfid, amount:amt, studentName:loadStudent.name, by:"Cashier"});
   if(r.ok){
-    loadStudent=r.student||loadStudent;
+    if(r.balanceAfter!=null) loadStudent.balance=r.balanceAfter;
     showResult(true,"Wallet loaded",`${peso(amt)} added`,r.balanceAfter);
     $("#loadAmt").value=""; renderLoadPanel(); refreshLoadBtn();
-  }else{ showResult(false,r.reason||"Top-up failed",""); refreshLoadBtn(); }
+  }else{ showResult(false,r.reason||"Top-up failed","" ); refreshLoadBtn(); }
 });
 
 /* ============================================================
@@ -630,10 +630,10 @@ $("#enrollBtn").addEventListener("click",async()=>{
   $("#enrollBtn").disabled=true;
   const r=await api("enroll",{rfid:lastUid, studentId:id});
   if(r.ok){
-    showResult(true,"Card linked",`${r.student.name} ‚Üí ${lastUid}`);
-    lastUid=""; $("#enrollId").value=""; $("#enrollUid").innerHTML=`<span>Scanned card UID</span>‚Äî tap a card ‚Äî`;
+    showResult(true,"Card linked",`${r.student.name} ? ${lastUid}`);
+    lastUid=""; $("#enrollId").value=""; $("#enrollUid").innerHTML=`<span>Scanned card UID</span>ó tap a card ó`;
     refreshEnrollBtn();
-  }else{ showResult(false,r.reason||"Could not link card",""); refreshEnrollBtn(); }
+  }else{ showResult(false,r.reason||"Could not link card","" ); refreshEnrollBtn(); }
 });
 
 /* ============================================================
@@ -675,15 +675,15 @@ function saveSettings(){
 }
 $("#demoToggle").addEventListener("change",e=>{
   CONFIG.DEMO_MODE=e.target.checked; syncSettingsUI(); saveSettings(); loadMenu();
-  toast(CONFIG.DEMO_MODE?"Demo mode on":"Live mode on ‚Äî using n8n");
+  toast(CONFIG.DEMO_MODE?"Demo mode on":"Live mode on ó using n8n");
 });
 $("#n8nBase").addEventListener("change",e=>{ CONFIG.N8N_BASE=e.target.value.trim().replace(/\/$/,""); saveSettings(); });
 $("#testBtn").addEventListener("click",async()=>{
-  $("#testResult").textContent="Testing‚Ä¶";
+  $("#testResult").textContent="TestingÖ";
   const r=await api("menu",{});
   $("#testResult").innerHTML = r.ok
-    ? `‚úÖ Connected. Loaded ${ (r.menu||[]).length } menu items.`
-    : `‚ùå ${r.reason||"No response"}`;
+    ? `? Connected. Loaded ${ (r.menu||[]).length } menu items.`
+    : `? ${r.reason||"No response"}`;
 });
 $("#demoUids").innerHTML = demo.students.map(s=>`<code>${s.rfid}</code> ${s.name}`).join("<br>");
 
