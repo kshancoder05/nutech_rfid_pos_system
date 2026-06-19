@@ -291,9 +291,9 @@
           </div>
 
           <div class="fld">
-            <label for="n8nBase">n8n webhook base URL</label>
-            <input id="n8nBase" placeholder="https://bernard100.app.n8n.cloud/webhook" />
-            <p class="helper">The app posts to <code>{base}/cafeteria</code> with a JSON body <code>{ action, ... }</code>. Actions: <code>verify</code>, <code>purchase</code>, <code>topup</code>, <code>enroll</code>, <code>menu</code>, <code>bio-enroll</code>, <code>bio-template</code>.</p>
+            <label for="n8nBase">n8n webhook URL</label>
+            <input id="n8nBase" placeholder="https://bernard100.app.n8n.cloud/webhook/cafeteria" />
+            <p class="helper">This webhook URL is called with <strong>POST</strong> only. Do not open it directly in a browser. The app posts JSON like <code>{ action, ... }</code>. Actions: <code>verify</code>, <code>purchase</code>, <code>topup</code>, <code>enroll</code>, <code>menu</code>, <code>bio-enroll</code>, <code>bio-template</code>.</p>
           </div>
 
           <button class="btn btn-primary" id="testBtn" style="margin-bottom:8px">Test connection</button>
@@ -348,7 +348,7 @@
    ============================================================ */
 const CONFIG = {
   DEMO_MODE: true,
-  N8N_BASE: "https://bernard100.app.n8n.cloud/webhook",
+  N8N_BASE: "https://bernard100.app.n8n.cloud/webhook/cafeteria",
   RFID_SOURCE: "hid",            // "hid" = USB keyboard reader · "arduino" = Web Serial
   ARDUINO_BAUD: 115200,          // must match the Arduino sketch
   BIO_BRIDGE: "http://localhost:9001",  // local DigitalPersona bridge service
@@ -391,7 +391,9 @@ const demo = {
 async function api(action, payload={}){
   if(CONFIG.DEMO_MODE) return demoApi(action, payload);
   try{
-    const res = await fetch(`${CONFIG.N8N_BASE}/cafeteria`, {
+    const base = CONFIG.N8N_BASE.replace(/\/+$/g, "");
+    const endpoint = base.endsWith("/cafeteria") ? base : `${base}/cafeteria`;
+    const res = await fetch(endpoint, {
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({action, ...payload})
@@ -580,6 +582,25 @@ function handleScan(uid){
   verifyAndShow(uid, target);
 }
 
+function normalizeStudent(student){
+  if(!student) return null;
+  const fields = student.fields || {};
+  const pick = (keys, fallback) => {
+    for(const key of keys){ if(student[key] != null) return student[key]; }
+    for(const key of keys){ if(fields[key] != null) return fields[key]; }
+    return fallback;
+  };
+  return {
+    id: pick(["id","studentId","studentID","Student ID","ID"], ""),
+    name: pick(["name","Name","studentName","Student Name"], ""),
+    grade: pick(["grade","Grade"], ""),
+    section: pick(["section","Section"], ""),
+    balance: Number(pick(["balance","Balance"], 0)) || 0,
+    status: pick(["status","Status"], "Active") || "Active",
+    rfid: pick(["rfid","RFID"], "")
+  };
+}
+
 async function verifyAndShow(uid, target){
   const r = await api("verify",{rfid:uid});
   if(!r.ok){
@@ -588,8 +609,9 @@ async function verifyAndShow(uid, target){
     toast(r.reason||"Card not recognized", true);
     return;
   }
-  if(target==="load"){ loadStudent=r.student; renderLoadPanel(); refreshLoadBtn(); }
-  else { posStudent=r.student; renderIdPanel(); refreshPay(); }
+  const student = normalizeStudent(r.student);
+  if(target==="load"){ loadStudent=student; renderLoadPanel(); refreshLoadBtn(); }
+  else { posStudent=student; renderIdPanel(); refreshPay(); }
 }
 
 /* ============================================================
@@ -609,10 +631,11 @@ function renderIdPanel(){
 function studentMarkup(s){
   const low=s.balance<50;
   const bad=s.status!=="Active";
+  const name = s.name || "Student";
   return `<div class="student">
-    <div class="avatar">${initials(s.name)}</div>
+    <div class="avatar">${initials(name)}</div>
     <div class="s-meta">
-      <div class="name">${s.name}</div>
+      <div class="name">${name}</div>
       <div class="sub">${s.grade} · ${s.section}</div>
       <div class="id">${s.id} &nbsp;
         <span class="chip ${bad?'warn':'ok'}">${bad?'⚠ '+s.status:'● Active'}</span></div>
@@ -735,7 +758,8 @@ function refreshLoadBtn(){
   const amt=Number($("#loadAmt").value)||0, btn=$("#loadBtn");
   if(!loadStudent){ btn.disabled=true; btn.textContent="Tap a card first"; return; }
   if(amt<=0){ btn.disabled=true; btn.textContent="Enter an amount"; return; }
-  btn.disabled=false; btn.textContent=`Add ${peso(amt)} to ${loadStudent.name.split(" ")[0]}'s wallet`;
+  const firstName = (loadStudent.name || "student").split(" ")[0] || "student";
+  btn.disabled=false; btn.textContent=`Add ${peso(amt)} to ${firstName}'s wallet`;
 }
 $("#loadBtn").addEventListener("click",async()=>{
   const amt=Number($("#loadAmt").value)||0;
