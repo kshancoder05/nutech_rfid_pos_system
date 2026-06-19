@@ -204,6 +204,7 @@
       <button class="tab" role="tab" aria-selected="true" data-view="pos">Point of Sale</button>
       <button class="tab" role="tab" aria-selected="false" data-view="load">Load / Top-up</button>
       <button class="tab" role="tab" aria-selected="false" data-view="enroll">Enroll Card</button>
+      <button class="tab" role="tab" aria-selected="false" data-view="admin">Admin</button>
     </nav>
     <div class="top-right">
       <span class="reader-pill"><span class="led"></span>Reader listening</span>
@@ -259,6 +260,19 @@
     <!-- ============ ENROLL ============ -->
     <section class="view" id="view-enroll">
       <div class="narrow">
+        <div class="card panel-pad" style="margin-bottom:18px">
+          <div class="card-h" style="padding:0 0 14px;border:none"><h2>Register a new card</h2></div>
+          <div class="uid-show" id="regUid"><span>Scanned card UID</span>— tap a card —</div>
+          <div class="fld"><label for="regOwner">Owner name</label>
+            <input id="regOwner" placeholder="e.g. Maria Santos" autocomplete="off" /></div>
+          <div class="fld"><label for="regType">Owner type</label>
+            <select id="regType"><option>Student</option><option>Teacher</option><option>Staff</option><option>Parent</option><option>Other</option></select></div>
+          <div class="fld"><label for="regId">Owner ID (student or employee no.)</label>
+            <input id="regId" placeholder="e.g. 2026-0500" autocomplete="off" /></div>
+          <button class="btn btn-primary" id="regBtn" disabled>Scan a card to register</button>
+          <p class="endpoints" id="regResult"></p>
+          <p class="helper">Creates a brand-new account with its own Account ID and an empty wallet for this card. Use this for first-time students or staff.</p>
+        </div>
         <div class="card panel-pad">
           <div class="card-h" style="padding:0 0 14px;border:none"><h2>Link a card to a student</h2></div>
           <div class="uid-show" id="enrollUid"><span>Scanned card UID</span>— tap a card —</div>
@@ -267,13 +281,49 @@
             <input id="enrollId" placeholder="e.g. 2026-0418" autocomplete="off" />
           </div>
           <button class="btn btn-primary" id="enrollBtn" disabled>Scan a card to link</button>
-          <p class="helper">Tap the student's new card on the reader, type their Student ID, then link. This writes the card's UID onto that student's record so future taps identify them automatically. Re-enrolling replaces a lost card.</p>
+          <p class="helper">Tap the student's new card on the reader, type their Student ID, then link. An account ID will be generated automatically for the new RFID registration. Re-enrolling replaces a lost card.</p>
 
           <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--line-2)">
             <div class="tt" style="margin-bottom:4px">Fingerprint (optional second factor)</div>
             <p class="helper" style="margin-top:0">After the card is linked, capture the student's fingerprint on the DigitalPersona 4500 to require it at checkout. <strong>Biometric data</strong> — collect written consent first.</p>
             <button class="btn btn-primary" id="bioEnrollBtn" disabled style="margin-top:10px">Link a card first</button>
             <p class="endpoints" id="bioEnrollResult" style="margin-top:8px"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ADMIN ============ -->
+    <section class="view" id="view-admin">
+      <div class="narrow">
+        <div class="card panel-pad" id="adminLock">
+          <div class="card-h" style="padding:0 0 14px;border:none"><h2>Admin access</h2></div>
+          <p class="helper" style="margin-top:0">Reassigning a card is restricted to admins. Enter the admin PIN to continue.</p>
+          <div class="fld"><label for="adminPin">Admin PIN</label>
+            <input id="adminPin" type="password" inputmode="numeric" placeholder="••••" autocomplete="off" /></div>
+          <button class="btn btn-primary" id="adminUnlockBtn">Unlock</button>
+          <p class="endpoints" id="adminLockMsg"></p>
+        </div>
+
+        <div id="adminTool" style="display:none">
+          <div class="card id-panel" id="adminPanel"></div>
+          <div class="card panel-pad">
+            <div class="card-h" style="padding:0 0 14px;border:none"><h2>Reassign card to a new owner</h2></div>
+            <div class="fld"><label for="newOwnerName">New owner name</label>
+              <input id="newOwnerName" placeholder="e.g. Maria Santos" autocomplete="off" /></div>
+            <div class="fld"><label for="newOwnerType">Owner type</label>
+              <select id="newOwnerType"><option>Student</option><option>Teacher</option><option selected>Staff</option></select></div>
+            <div class="fld"><label for="newOwnerId">Owner ID (student or employee ID)</label>
+              <input id="newOwnerId" placeholder="e.g. EMP-2026-014" autocomplete="off" /></div>
+            <div class="fld"><label for="reassignReason">Reason</label>
+              <input id="reassignReason" placeholder="e.g. Previous owner resigned" autocomplete="off" /></div>
+            <div class="toggle-row" style="margin-bottom:14px">
+              <div><div class="tt">Reset wallet to ₱0</div><div class="ts">Clear the old owner's balance for a clean handover (refund any cash separately).</div></div>
+              <label class="switch"><input type="checkbox" id="clearBalanceToggle" checked><span class="slider"></span></label>
+            </div>
+            <button class="btn btn-primary" id="reassignBtn" disabled>Tap a card to reassign</button>
+            <p class="helper">The old owner's fingerprint is <strong>always removed</strong> on reassignment — the new owner must re-enroll theirs in the Enroll tab. Every handover is logged.</p>
+            <p class="endpoints" id="reassignResult"></p>
           </div>
         </div>
       </div>
@@ -352,7 +402,8 @@ const CONFIG = {
   RFID_SOURCE: "hid",            // "hid" = USB keyboard reader · "arduino" = Web Serial
   ARDUINO_BAUD: 115200,          // must match the Arduino sketch
   BIO_BRIDGE: "http://localhost:9001",  // local DigitalPersona bridge service
-  REQUIRE_FP: false              // require a fingerprint to confirm a purchase
+  REQUIRE_FP: false,             // require a fingerprint to confirm a purchase
+  ADMIN_PIN: "1234"             // gate for the Admin / reassign tool
 };
 // try to restore saved settings (works once hosted; ignored if storage blocked)
 try{ const s=JSON.parse(localStorage.getItem("cafePOS")||"{}"); Object.assign(CONFIG,s);}catch(e){}
@@ -445,6 +496,28 @@ function demoApi(action, p){
       if(!s) return {ok:false, reason:"Card not recognized"};
       return {ok:true, enrolled:!!s.bioEnrolled, template:s.bioTemplate||""};
     }
+    case "account-info":{
+      const s=findByRfid(p.rfid);
+      if(!s) return {ok:false, reason:"Card not recognized"};
+      return {ok:true, account:{ recordId:"rec"+s.id, accountId:s.id, rfid:s.rfid,
+        balance:s.balance, status:s.status, ownerName:s.ownerName||s.name,
+        ownerType:s.ownerType||"Student", ownerId:s.ownerId||s.id, bioEnrolled:!!s.bioEnrolled }};
+    }
+    case "reassign":{
+      const s=findByRfid(p.rfid);
+      if(!s) return {ok:false, reason:"Card not recognized"};
+      s.ownerName=p.ownerName; s.ownerType=p.ownerType; s.ownerId=p.ownerId; s.name=p.ownerName;
+      s.bioEnrolled=false; s.bioTemplate="";
+      if(p.clearBalance) s.balance=0;
+      return {ok:true, account:{ownerName:p.ownerName, ownerType:p.ownerType}};
+    }
+    case "register":{
+      if(findByRfid(p.rfid)) return {ok:false, reason:"Card already registered"};
+      const accountId="ACC-"+Date.now().toString(36).toUpperCase();
+      demo.students.push({id:p.ownerId||accountId, rfid:p.rfid, name:p.ownerName, grade:p.ownerType||"",
+        section:"", balance:0, status:"Active", ownerName:p.ownerName, ownerType:p.ownerType, ownerId:p.ownerId});
+      return {ok:true, accountId, owner:p.ownerName};
+    }
     default: return {ok:false, reason:"Unknown action"};
   }
 }
@@ -481,7 +554,7 @@ $("#gearBtn").addEventListener("click",()=>switchView("settings"));
 function switchView(v){
   document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", t.dataset.view===v));
   document.querySelectorAll(".view").forEach(s=>s.classList.toggle("active", s.id==="view-"+v));
-  scanContext = (v==="load")?"load":(v==="enroll")?"enroll":"pos";
+  scanContext = (v==="load")?"load":(v==="enroll")?"enroll":(v==="admin")?"admin":"pos";
 }
 
 /* ============================================================
@@ -575,9 +648,11 @@ function handleScan(uid){
   if(scanContext==="enroll"){
     lastUid=uid;
     $("#enrollUid").innerHTML=`<span>Scanned card UID</span>${uid}`;
-    refreshEnrollBtn();
+    const reg = $("#regUid"); if(reg) reg.innerHTML=`<span>Scanned card UID</span>${uid}`;
+    refreshEnrollBtn(); refreshRegBtn();
     return;
   }
+  if(scanContext==="admin"){ adminScan(uid); return; }
   const target = scanContext==="load" ? "load" : "pos";
   verifyAndShow(uid, target);
 }
@@ -592,6 +667,7 @@ function normalizeStudent(student){
   };
   return {
     id: pick(["id","studentId","studentID","Student ID","ID"], ""),
+    accountId: pick(["accountId","accountID","Account ID","account_id","account_id"], ""),
     name: pick(["name","Name","studentName","Student Name"], ""),
     grade: pick(["grade","Grade"], ""),
     section: pick(["section","Section"], ""),
@@ -727,7 +803,13 @@ async function doPurchase(){
     }
   }
 
-  const r=await api("purchase",{rfid:posStudent.rfid, items, total, studentName:posStudent.name});
+  const r=await api("purchase",{
+    rfid:posStudent.rfid,
+    items,
+    total,
+    studentName:posStudent.name,
+    accountId: posStudent.accountId || undefined
+  });
   if(r.ok){
     if(r.balanceAfter!=null) posStudent.balance=r.balanceAfter;
     showResult(true,"Payment received",`${total<=0?'':peso(total)+' charged'}`,r.balanceAfter);
@@ -765,7 +847,13 @@ $("#loadBtn").addEventListener("click",async()=>{
   const amt=Number($("#loadAmt").value)||0;
   if(!loadStudent||amt<=0)return;
   $("#loadBtn").disabled=true;
-  const r=await api("topup",{rfid:loadStudent.rfid, amount:amt, studentName:loadStudent.name, by:"Cashier"});
+  const r=await api("topup",{
+    rfid:loadStudent.rfid,
+    amount:amt,
+    studentName:loadStudent.name,
+    accountId: loadStudent.accountId || undefined,
+    by:"Cashier"
+  });
   if(r.ok){
     if(r.balanceAfter!=null) loadStudent.balance=r.balanceAfter;
     showResult(true,"Wallet loaded",`${peso(amt)} added`,r.balanceAfter);
@@ -778,17 +866,29 @@ $("#loadBtn").addEventListener("click",async()=>{
    ============================================================ */
 $("#enrollId").addEventListener("input",refreshEnrollBtn);
 function refreshEnrollBtn(){
-  const id=$("#enrollId").value.trim(), btn=$("#enrollBtn");
+  const id=$("#enrollId").value.trim();
+  const btn=$("#enrollBtn");
   if(!lastUid){ btn.disabled=true; btn.textContent="Scan a card to link"; return; }
   if(!id){ btn.disabled=true; btn.textContent="Enter a Student ID"; return; }
   btn.disabled=false; btn.textContent=`Link card to ${id}`;
 }
 let lastLinkedRfid="";
+function generateAccountId(studentId){
+  if(typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"){
+    return `acct_${studentId}_${crypto.randomUUID()}`;
+  }
+  return `acct_${studentId}_${Date.now()}`;
+}
 $("#enrollBtn").addEventListener("click",async()=>{
   const id=$("#enrollId").value.trim();
   if(!lastUid||!id)return;
+  const accountId = generateAccountId(id);
   $("#enrollBtn").disabled=true;
-  const r=await api("enroll",{rfid:lastUid, studentId:id});
+  const r=await api("enroll",{
+    rfid:lastUid,
+    studentId:id,
+    accountId
+  });
   if(r.ok){
     lastLinkedRfid=lastUid;
     showResult(true,"Card linked",`${r.student.name} → ${lastUid}`);
@@ -810,6 +910,120 @@ $("#bioEnrollBtn").addEventListener("click",async()=>{
   const r=await api("bio-enroll",{rfid:lastLinkedRfid, template:cap.template});
   $("#bioEnrollResult").innerHTML = r.ok ? "✅ Fingerprint saved for this card." : `❌ ${r.reason||"Could not save"}`;
   b.textContent="Link a card first"; lastLinkedRfid="";
+});
+
+let adminEnabled=false;
+let adminPendingUid="";
+
+$("#regOwner").addEventListener("input",refreshRegBtn);
+$("#regId").addEventListener("input",refreshRegBtn);
+$("#regType").addEventListener("change",refreshRegBtn);
+$("#regBtn").addEventListener("click",async()=>{
+  const ownerName=$("#regOwner").value.trim();
+  const ownerType=$("#regType").value;
+  const ownerId=$("#regId").value.trim();
+  if(!lastUid||!ownerName||!ownerId) return;
+  const btn=$("#regBtn"); btn.disabled=true; btn.textContent="Registering…";
+  const r=await api("register",{rfid:lastUid, ownerName, ownerType, ownerId});
+  if(r.ok){
+    showResult(true,"Card registered",`Account created for ${ownerName}`);
+    $("#regResult").textContent=`✅ ${ownerName} registered with account ${r.accountId || "(generated)"}`;
+    lastUid="";
+    $("#regUid").innerHTML=`<span>Scanned card UID</span>— tap a card —`;
+    $("#regOwner").value=""; $("#regId").value=""; refreshRegBtn();
+  } else {
+    showResult(false,r.reason||"Registration failed","Please try again");
+    $("#regResult").textContent=`❌ ${r.reason||"Registration failed"}`;
+  }
+  btn.textContent="Scan a card to register";
+});
+
+function refreshRegBtn(){
+  const ownerName=$("#regOwner").value.trim();
+  const ownerId=$("#regId").value.trim();
+  const btn=$("#regBtn");
+  if(!lastUid){ btn.disabled=true; btn.textContent="Scan a card to register"; return; }
+  if(!ownerName||!ownerId){ btn.disabled=true; btn.textContent="Enter owner name and ID"; return; }
+  btn.disabled=false; btn.textContent=`Register ${ownerName}`;
+}
+
+$("#adminUnlockBtn").addEventListener("click",()=>{
+  const pin=$("#adminPin").value.trim();
+  if(pin===CONFIG.ADMIN_PIN){
+    adminEnabled=true;
+    $("#adminLock").style.display="none";
+    $("#adminTool").style.display="block";
+    $("#adminLockMsg").textContent="Admin unlocked.";
+    adminPendingUid="";
+    renderAdminPanel();
+  } else {
+    $("#adminLockMsg").textContent="Invalid PIN.";
+  }
+});
+
+function renderAdminPanel(){
+  const panel=$("#adminPanel");
+  if(!adminEnabled){ panel.innerHTML=`<div class="tap-idle"><div class="tap-graphic">${ICONS.card}</div><div><h3>Unlock admin first</h3><p>Enter the admin PIN to see card details.</p></div></div>`; return; }
+  if(!adminPendingUid){
+    panel.innerHTML=`<div class="tap-idle"><div class="tap-graphic">${ICONS.card}</div><div><h3>Tap a card to reassign</h3><p>Scan the current card to begin the reassignment.</p></div></div>`;
+    $("#reassignBtn").disabled=true;
+    return;
+  }
+  panel.innerHTML=`<div class="card-id"><div>${ICONS.card}</div>
+      <div><div class="l">Current card UID</div><div class="v num">${adminPendingUid}</div></div></div>`;
+  $("#reassignBtn").disabled=false;
+}
+
+async function adminScan(uid){
+  if(!adminEnabled){ showResult(false,"Admin required","Unlock admin mode first"); return; }
+  adminPendingUid=uid;
+  renderAdminPanel();
+  const r=await api("account-info",{rfid:uid});
+  if(r.ok && r.account){
+    $("#adminPanel").innerHTML=`<div class="card-id"><div>${ICONS.card}</div>
+      <div><div class="l">Card UID</div><div class="v num">${uid}</div></div></div>
+      <div class="student-card">
+        <div class="student-name">${r.account.ownerName}</div>
+        <div class="student-meta">${r.account.ownerType} • ${r.account.ownerId}</div>
+        <div class="student-balance">${peso(r.account.balance||0)} wallet</div>
+      </div>`;
+    $("#reassignBtn").disabled=false;
+  } else {
+    $("#adminPanel").innerHTML=`<div class="tap-idle"><div class="tap-graphic">${ICONS.card}</div><div><h3>Card not recognized</h3><p>${r.reason||"No account found"}</p></div></div>`;
+    $("#reassignBtn").disabled=true;
+  }
+}
+
+const adminInputs = ["#newOwnerName", "#newOwnerId", "#newOwnerType"];
+adminInputs.forEach(sel => { const el=$(sel); if(el) el.addEventListener("input",refreshReassignBtn); });
+function refreshReassignBtn(){
+  const name=$("#newOwnerName").value.trim();
+  const id=$("#newOwnerId").value.trim();
+  const btn=$("#reassignBtn");
+  if(!adminEnabled || !adminPendingUid || !name || !id){ btn.disabled=true; return; }
+  btn.disabled=false;
+}
+
+$("#reassignBtn").addEventListener("click",async()=>{
+  if(!adminEnabled || !adminPendingUid) return;
+  const ownerName=$("#newOwnerName").value.trim();
+  const ownerType=$("#newOwnerType").value;
+  const ownerId=$("#newOwnerId").value.trim();
+  const reason=$("#reassignReason").value.trim();
+  const clearBalance=$("#clearBalanceToggle").checked;
+  if(!ownerName||!ownerId){ return; }
+  $("#reassignBtn").disabled=true; $("#reassignResult").textContent="Processing reassignment…";
+  const r=await api("reassign",{rfid:adminPendingUid, ownerName, ownerType, ownerId, reason, clearBalance});
+  if(r.ok){
+    showResult(true,"Card reassigned",`Now owned by ${ownerName}`);
+    $("#reassignResult").textContent=`✅ ${ownerName} now owns this card.`;
+    adminPendingUid="";
+    renderAdminPanel();
+  } else {
+    showResult(false,r.reason||"Reassign failed","Please try again");
+    $("#reassignResult").textContent=`❌ ${r.reason||"Reassign failed"}`;
+    $("#reassignBtn").disabled=false;
+  }
 });
 
 /* ============================================================
