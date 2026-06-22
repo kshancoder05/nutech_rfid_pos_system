@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Attendance — Facial Recognition</title>
+<!-- face-api.js (browser face recognition). Served from CDN; works on http://localhost or https. -->
+<script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+<style>
+  :root{
+    --bg:#0f1420; --panel:#161d2e; --panel2:#1d2740; --ink:#eef2fb; --muted:#9fb0cf;
+    --line:#283450; --brand:#3b6fd6; --brand2:#2b569f; --ok:#37c08b; --bad:#e26b6b; --warn:#e0b341;
+    --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --font-d:"Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px}
+  .topbar{display:flex;align-items:center;gap:6px;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+  .brand{font-family:var(--font-d);font-weight:700;font-size:1.05rem;margin-right:10px;letter-spacing:.2px}
+  .brand small{display:block;font-weight:500;font-size:.66rem;color:var(--muted);letter-spacing:.5px;text-transform:uppercase}
+  .tab{background:transparent;border:1px solid transparent;color:var(--muted);padding:8px 14px;border-radius:9px;cursor:pointer;font-size:.92rem;font-weight:600}
+  .tab[aria-selected="true"]{background:var(--panel2);color:var(--ink);border-color:var(--line)}
+  .tab:hover{color:var(--ink)}
+  .spacer{flex:1}
+  .pill{font-size:.72rem;padding:5px 10px;border-radius:20px;border:1px solid var(--line);color:var(--muted)}
+  .pill.on{color:var(--ok);border-color:#27613f;background:#11241c}
+  .pill.off{color:var(--warn);border-color:#5a4a16;background:#241f10}
+  main{max-width:1040px;margin:0 auto;padding:18px 14px 60px}
+  .view{display:none}
+  .view.active{display:block}
+  .grid{display:grid;gap:16px}
+  .cols2{grid-template-columns:1fr 1fr}
+  @media(max-width:820px){.cols2{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+  h2{font-family:var(--font-d);font-size:1.05rem;margin:0 0 14px}
+  h3{margin:0 0 4px;font-size:1rem}
+  label{display:block;font-size:.78rem;color:var(--muted);margin:0 0 5px;font-weight:600}
+  input,select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:10px 12px;font-size:.95rem;font-family:inherit}
+  input:focus,select:focus{outline:none;border-color:var(--brand)}
+  .fld{margin-bottom:12px}
+  .row{display:flex;gap:12px}.row>*{flex:1}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:10px;padding:11px 16px;font-size:.95rem;font-weight:700;cursor:pointer;font-family:inherit}
+  .btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand2)}
+  .btn-primary:disabled{background:#2a3654;color:#6f7fa0;cursor:not-allowed}
+  .btn-ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+  .btn-block{width:100%}
+  .camwrap{position:relative;background:#000;border-radius:12px;overflow:hidden;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center}
+  video,canvas.overlay{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  canvas.overlay{pointer-events:none}
+  .cam-msg{color:#7e8db0;font-size:.9rem;text-align:center;padding:20px}
+  .statusbar{margin-top:12px;padding:14px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);text-align:center;min-height:74px;display:flex;flex-direction:column;justify-content:center}
+  .statusbar .big{font-family:var(--font-d);font-size:1.3rem;font-weight:700}
+  .statusbar .sub{color:var(--muted);font-size:.85rem;margin-top:3px}
+  .statusbar.in{border-color:#27613f;background:#11241c}
+  .statusbar.out{border-color:#5a4a16;background:#241f10}
+  .statusbar.unknown{border-color:#5a2727;background:#241313}
+  table{width:100%;border-collapse:collapse;font-size:.86rem}
+  th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600;font-size:.74rem;text-transform:uppercase;letter-spacing:.04em}
+  .chip{font-size:.7rem;padding:2px 8px;border-radius:20px;border:1px solid var(--line);color:var(--muted)}
+  .chip.ok{color:var(--ok);border-color:#27613f}.chip.bad{color:var(--bad);border-color:#5a2727}.chip.warn{color:var(--warn);border-color:#5a4a16}
+  .kpi{display:flex;gap:14px;flex-wrap:wrap}
+  .kpi .box{flex:1;min-width:130px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .kpi .n{font-family:var(--font-d);font-size:1.8rem;font-weight:700}
+  .kpi .l{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+  .helper{color:var(--muted);font-size:.8rem;margin:10px 0 0;line-height:1.5}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#0b1322;border:1px solid var(--line);color:var(--ink);padding:11px 18px;border-radius:10px;opacity:0;transition:.25s;pointer-events:none;z-index:50;max-width:90%}
+  .toast.show{opacity:1}.toast.bad{border-color:#5a2727}
+  .muted{color:var(--muted)}
+  .loadbar{font-size:.8rem;color:var(--warn)}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">Attendance<small>Facial Recognition · School</small></div>
+    <button class="tab" data-view="dash" aria-selected="true">Dashboard</button>
+    <button class="tab" data-view="register" aria-selected="false">Registration</button>
+    <button class="tab" data-view="attend" aria-selected="false">Attendance</button>
+    <button class="tab" data-view="records" aria-selected="false">View Records</button>
+    <div class="spacer"></div>
+    <span class="pill" id="modelPill">Loading models…</span>
+    <span class="pill" id="modePill"></span>
+    <button class="tab" data-view="settings" aria-selected="false" title="Settings">⚙</button>
+  </div>
+
+  <main>
+    <!-- DASHBOARD -->
+    <section class="view active" id="view-dash">
+      <div class="card" style="margin-bottom:16px">
+        <h2>Today at a glance</h2>
+        <div class="kpi" id="kpis"></div>
+      </div>
+      <div class="card">
+        <h2>Today's log</h2>
+        <div id="dashLog"><p class="muted">No check-ins yet today.</p></div>
+      </div>
+    </section>
+
+    <!-- REGISTRATION -->
+    <section class="view" id="view-register">
+      <div class="grid cols2">
+        <div class="card">
+          <h2>Capture face</h2>
+          <div class="camwrap" id="regCamWrap">
+            <video id="regVideo" autoplay muted playsinline></video>
+            <div class="cam-msg" id="regCamMsg">Camera off</div>
+          </div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn btn-ghost" id="regCamBtn">Start camera</button>
+            <button class="btn btn-primary" id="captureBtn" disabled>Capture face</button>
+          </div>
+          <p class="helper" id="regFaceState">No face captured yet. Look straight at the camera with good lighting, then Capture.</p>
+        </div>
+        <div class="card">
+          <h2>Register a person</h2>
+          <div class="fld"><label>ID No</label><input id="rID" placeholder="e.g. 2026-0500"></div>
+          <div class="fld"><label>Full name</label><input id="rName" placeholder="e.g. Maria Santos"></div>
+          <div class="row">
+            <div class="fld"><label>Age</label><input id="rAge" type="number" min="1"></div>
+            <div class="fld"><label>Sex</label><select id="rSex"><option>Male</option><option>Female</option></select></div>
+          </div>
+          <div class="fld"><label>Address</label><input id="rAddr" placeholder="Barangay, City"></div>
+          <div class="fld"><label>Department</label><select id="rDept"></select></div>
+          <div class="row">
+            <div class="fld"><label>Contact number</label><input id="rContact" placeholder="09xx xxx xxxx"></div>
+            <div class="fld"><label>Email</label><input id="rEmail" type="email" placeholder="name@email.com"></div>
+          </div>
+          <button class="btn btn-primary btn-block" id="saveBtn" disabled>Capture a face first</button>
+          <p class="helper">The face is stored as a math fingerprint (128 numbers), not a photo — that's what recognition compares against.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ATTENDANCE -->
+    <section class="view" id="view-attend">
+      <div class="grid cols2">
+        <div class="card">
+          <h2>Live attendance</h2>
+          <div class="camwrap" id="attCamWrap">
+            <video id="attVideo" autoplay muted playsinline></video>
+            <canvas class="overlay" id="attCanvas"></canvas>
+            <div class="cam-msg" id="attCamMsg">Camera off</div>
+          </div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn btn-primary" id="attStartBtn">Start attendance</button>
+            <button class="btn btn-ghost" id="attStopBtn" disabled>Stop</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Recognition</h2>
+          <div class="statusbar" id="attStatus"><div class="big">Idle</div><div class="sub">Start attendance and face the camera.</div></div>
+          <p class="helper">Personnel punch <b>Time In → Break Out → Break In → Time Out</b>. Students just <b>Time In / Time Out</b>. A <span id="cdLbl">60</span>s cooldown stops double-logging.</p>
+          <div id="attRecent" style="margin-top:8px"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RECORDS -->
+    <section class="view" id="view-records">
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <h2 style="margin:0">Daily Time Records</h2>
+          <div class="spacer" style="flex:1"></div>
+          <input id="recDate" type="date" style="width:auto">
+        </div>
+        <div id="dtrTable"></div>
+      </div>
+      <div class="card">
+        <h2>Registered people</h2>
+        <div id="peopleTable"></div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="view-settings">
+      <div class="card">
+        <h2>Settings</h2>
+        <div class="fld"><label>Mode</label>
+          <select id="sDemo"><option value="true">Demo (in-browser, no backend)</option><option value="false">Live (n8n + Airtable)</option></select></div>
+        <div class="fld"><label>n8n webhook base URL</label><input id="sN8n" placeholder="https://bernard100.app.n8n.cloud/webhook"></div>
+        <div class="row">
+          <div class="fld"><label>Match strictness (0.4 strict – 0.6 loose)</label><input id="sThresh" type="number" step="0.01" min="0.3" max="0.7"></div>
+          <div class="fld"><label>Cooldown (seconds)</label><input id="sCooldown" type="number" min="5"></div>
+        </div>
+        <div class="row">
+          <div class="fld"><label>Tardy after (HH:MM)</label><input id="sLate" placeholder="08:00"></div>
+          <div class="fld"><label>Device name</label><input id="sDevice" placeholder="Front Gate Laptop"></div>
+        </div>
+        <div class="fld"><label>Face model URL (advanced)</label><input id="sModel"></div>
+        <button class="btn btn-primary" id="saveSettings">Save settings</button>
+        <p class="helper">Camera needs the page served over <b>http://localhost</b> or https. If models fail to load offline, download the face-api model folder and point the model URL at it.</p>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+/* ============================ CONFIG ============================ */
+const CONFIG = {
+  DEMO_MODE: true,
+  N8N_BASE: "https://bernard100.app.n8n.cloud/webhook",
+  MATCH_THRESHOLD: 0.5,          // face distance; lower = stricter
+  COOLDOWN_SEC: 60,
+  LATE_AFTER: "08:00",           // Time In after this = Tardy
+  DEVICE: "Attendance Laptop",
+  MODEL_URL: "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model",
+  DEPARTMENTS: ["Student","Faculty","IT","Security","Maintenance","Library","Guidance","Registrar","HRM","R&D","Visitor"],
+  PERSONNEL_PUNCHES: ["Time In","Break Out","Break In","Time Out"],
+  STUDENT_PUNCHES: ["Time In","Time Out"]
+};
+
+/* ============================ STATE ============================ */
+const $ = s => document.querySelector(s);
+let people = [];          // {idNo, fullName, age, address, department, sex, contact, email, descriptor:[..128]}
+let dtr = [];             // demo daily records {entry, personId, name, department, date, "Time In":..., ...}
+let matcher = null;
+let modelsReady = false;
+let capturedDescriptor = null;
+let regStream=null, attStream=null, attTimer=null, attBusy=false;
+const cooldownMap = {};   // personId -> last punch ms
+
+/* ============================ TOAST ============================ */
+let toastT;
+function toast(msg, bad){
+  const el=$("#toast"); el.textContent=msg; el.className="toast show"+(bad?" bad":"");
+  clearTimeout(toastT); toastT=setTimeout(()=>el.className="toast",2600);
+}
+
+/* ============================ FACE MODELS ============================ */
+async function loadModels(){
+  try{
+    if(typeof faceapi==="undefined"){ setTimeout(loadModels,400); return; }
+    const url=CONFIG.MODEL_URL;
+    await faceapi.nets.tinyFaceDetector.loadFromUri(url);
+    await faceapi.nets.faceLandmark68Net.loadFromUri(url);
+    await faceapi.nets.faceRecognitionNet.loadFromUri(url);
+    modelsReady=true;
+    $("#modelPill").textContent="Models ready"; $("#modelPill").className="pill on";
+  }catch(e){
+    $("#modelPill").textContent="Models failed"; $("#modelPill").className="pill off";
+    toast("Could not load face models — check internet or model URL",true);
+  }
+}
+const detOpts = () => new faceapi.TinyFaceDetectorOptions({inputSize:320,scoreThreshold:0.5});
+
+function buildMatcher(){
+  const labeled = people.filter(p=>p.descriptor && p.descriptor.length===128)
+    .map(p=>new faceapi.LabeledFaceDescriptors(p.idNo, [Float32Array.from(p.descriptor)]));
+  matcher = labeled.length ? new faceapi.FaceMatcher(labeled, CONFIG.MATCH_THRESHOLD) : null;
+}
+
+/* ============================ CAMERA ============================ */
+async function startCamera(videoEl){
+  if(!navigator.mediaDevices?.getUserMedia){ toast("Camera not supported in this browser",true); return null; }
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"},audio:false});
+    videoEl.srcObject=stream; await videoEl.play(); return stream;
+  }catch(e){ toast("Camera blocked or not found — allow camera access",true); return null; }
+}
+function stopStream(s){ if(s) s.getTracks().forEach(t=>t.stop()); }
+
+/* ============================ TABS ============================ */
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>switchView(t.dataset.view)));
+function switchView(v){
+  document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", t.dataset.view===v));
+  document.querySelectorAll(".view").forEach(s=>s.classList.toggle("active", s.id==="view-"+v));
+  // free the camera when leaving a camera screen
+  if(v!=="register"){ stopStream(regStream); regStream=null; $("#regVideo").srcObject=null; $("#regCamMsg").style.display="flex"; $("#regCamBtn").textContent="Start camera"; }
+  if(v!=="attend"){ stopAttendance(); }
+  if(v==="dash") renderDash();
+  if(v==="records") renderRecords();
+}
+
+/* ============================ REGISTRATION ============================ */
+function fillDepartments(){
+  const opts=CONFIG.DEPARTMENTS.map(d=>`<option>${d}</option>`).join("");
+  $("#rDept").innerHTML=opts;
+}
+$("#regCamBtn").addEventListener("click",async()=>{
+  if(regStream){ stopStream(regStream); regStream=null; $("#regVideo").srcObject=null; $("#regCamMsg").style.display="flex"; $("#regCamBtn").textContent="Start camera"; $("#captureBtn").disabled=true; return; }
+  regStream=await startCamera($("#regVideo"));
+  if(regStream){ $("#regCamMsg").style.display="none"; $("#regCamBtn").textContent="Stop camera"; $("#captureBtn").disabled=!modelsReady; }
+});
+$("#captureBtn").addEventListener("click",async()=>{
+  if(!modelsReady){ toast("Face models still loading…",true); return; }
+  $("#captureBtn").disabled=true; $("#regFaceState").textContent="Detecting face…";
+  try{
+    const det=await faceapi.detectSingleFace($("#regVideo"),detOpts()).withFaceLandmarks().withFaceDescriptor();
+    if(!det){ $("#regFaceState").textContent="No face detected — move closer, improve lighting, try again."; toast("No face detected",true); }
+    else{
+      capturedDescriptor=Array.from(det.descriptor);
+      $("#regFaceState").innerHTML="✅ Face captured. Fill the details and Save.";
+      refreshSaveBtn();
+    }
+  }catch(e){ $("#regFaceState").textContent="Capture error — try again."; }
+  $("#captureBtn").disabled=false;
+});
+["#rID","#rName"].forEach(s=>$(s).addEventListener("input",refreshSaveBtn));
+function refreshSaveBtn(){
+  const ok=capturedDescriptor && $("#rID").value.trim() && $("#rName").value.trim();
+  const b=$("#saveBtn");
+  b.disabled=!ok;
+  b.textContent = !capturedDescriptor ? "Capture a face first" : (!$("#rID").value.trim()||!$("#rName").value.trim()) ? "Enter ID and name" : "Save registration";
+}
+$("#saveBtn").addEventListener("click",async()=>{
+  const person={
+    idNo:$("#rID").value.trim(), fullName:$("#rName").value.trim(), age:Number($("#rAge").value)||null,
+    address:$("#rAddr").value.trim(), department:$("#rDept").value, sex:$("#rSex").value,
+    contact:$("#rContact").value.trim(), email:$("#rEmail").value.trim(), descriptor:capturedDescriptor
+  };
+  $("#saveBtn").disabled=true;
+  const r=await api("att-register",person);
+  if(r.ok){
+    people.push(person); buildMatcher();
+    toast("Registered "+person.fullName);
+    capturedDescriptor=null;
+    ["#rID","#rName","#rAge","#rAddr","#rContact","#rEmail"].forEach(s=>$(s).value="");
+    $("#regFaceState").textContent="Saved. Capture another face to register the next person.";
+    refreshSaveBtn();
+  }else{ toast(r.reason||"Could not save",true); refreshSaveBtn(); }
+});
+
+/* ============================ ATTENDANCE ============================ */
+$("#attStartBtn").addEventListener("click",startAttendance);
+$("#attStopBtn").addEventListener("click",stopAttendance);
+async function startAttendance(){
+  if(!modelsReady){ toast("Face models still loading…",true); return; }
+  if(!matcher){ toast("No registered faces yet — register someone first",true); return; }
+  attStream=await startCamera($("#attVideo"));
+  if(!attStream) return;
+  $("#attCamMsg").style.display="none"; $("#attStartBtn").disabled=true; $("#attStopBtn").disabled=false;
+  setStatus("idle","Scanning…","Face the camera.");
+  attTimer=setInterval(scanTick,700);
+}
+function stopAttendance(){
+  clearInterval(attTimer); attTimer=null; attBusy=false;
+  stopStream(attStream); attStream=null; $("#attVideo").srcObject=null;
+  const c=$("#attCanvas"); if(c.getContext) c.getContext("2d").clearRect(0,0,c.width,c.height);
+  $("#attCamMsg").style.display="flex"; $("#attStartBtn").disabled=false; $("#attStopBtn").disabled=true;
+}
+function setStatus(kind,big,sub){
+  const el=$("#attStatus"); el.className="statusbar "+(kind||"");
+  el.innerHTML=`<div class="big">${big}</div><div class="sub">${sub||""}</div>`;
+}
+async function scanTick(){
+  if(attBusy || !attStream) return; attBusy=true;
+  try{
+    const v=$("#attVideo"), c=$("#attCanvas");
+    c.width=v.videoWidth||640; c.height=v.videoHeight||480;
+    const dets=await faceapi.detectAllFaces(v,detOpts()).withFaceLandmarks().withFaceDescriptors();
+    const ctx=c.getContext("2d"); ctx.clearRect(0,0,c.width,c.height);
+    for(const d of dets){
+      const {x,y,width,height}=d.detection.box;
+      const best = matcher ? matcher.findBestMatch(d.descriptor) : {label:"unknown",distance:1};
+      const known = best.label!=="unknown";
+      ctx.strokeStyle=known?"#37c08b":"#e26b6b"; ctx.lineWidth=3; ctx.strokeRect(x,y,width,height);
+      if(known){
+        const p=people.find(pp=>pp.idNo===best.label);
+        if(p) handleRecognized(p);
+        ctx.fillStyle="#37c08b"; ctx.font="16px sans-serif";
+        ctx.fillText((people.find(pp=>pp.idNo===best.label)||{}).fullName||best.label, x, Math.max(16,y-6));
+      }else{
+        ctx.fillStyle="#e26b6b"; ctx.font="16px sans-serif"; ctx.fillText("Unknown", x, Math.max(16,y-6));
+      }
+    }
+    if(!dets.length) { /* keep last status */ }
+  }catch(e){/* ignore frame errors */}
+  attBusy=false;
+}
+function handleRecognized(p){
+  const now=Date.now();
+  if(cooldownMap[p.idNo] && (now-cooldownMap[p.idNo])<CONFIG.COOLDOWN_SEC*1000){
+    const left=Math.ceil((CONFIG.COOLDOWN_SEC*1000-(now-cooldownMap[p.idNo]))/1000);
+    setStatus("", p.fullName, `${p.department} · cooldown ${left}s`);
+    return;
+  }
+  cooldownMap[p.idNo]=now;
+  recordPunch(p);
+}
+function todayStr(){ return new Date().toLocaleDateString("en-CA"); } // YYYY-MM-DD local
+function nowTime(){ return new Date().toLocaleTimeString("en-GB",{hour12:false}); } // HH:MM:SS
+function punchSequence(dept){ return (dept==="Student"||dept==="Visitor") ? CONFIG.STUDENT_PUNCHES : CONFIG.PERSONNEL_PUNCHES; }
+
+async function recordPunch(p){
+  const date=todayStr(), time=nowTime();
+  const r=await api("att-punch",{personId:p.idNo,name:p.fullName,department:p.department,date,time,device:CONFIG.DEVICE});
+  if(!r.ok){ setStatus("unknown",p.fullName,r.reason||"Could not log"); return; }
+  if(r.action==="complete"){ setStatus("",p.fullName,`${p.department} · already complete for today`); return; }
+  const kind = r.action==="Time In" ? "in" : r.action==="Time Out" ? "out" : "";
+  setStatus(kind||"in", p.fullName, `${p.department} · ${r.action} at ${time.slice(0,5)}${r.tardy?" · TARDY":""}`);
+  addRecent(p.fullName, r.action, time);
+  if($("#view-dash").classList.contains("active")) renderDash();
+}
+function addRecent(name,action,time){
+  const div=$("#attRecent");
+  const row=`<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:6px 0;font-size:.85rem"><span>${name}</span><span class="muted">${action} · ${time.slice(0,5)}</span></div>`;
+  div.innerHTML=row+div.innerHTML;
+}
+
+/* ============================ PUNCH LOGIC (demo mirror of n8n) ============================ */
+function demoPunch(p){
+  const date=todayStr();
+  let row=dtr.find(d=>d.personId===p.personId && d.date===date);
+  const seq=punchSequence(p.department);
+  if(!row){
+    row={entry:"DTR-"+Date.now().toString(36).toUpperCase(),personId:p.personId,name:p.name,department:p.department,date,Status:"Present"};
+    seq.forEach(s=>row[s]="");
+    dtr.push(row);
+  }
+  const next=seq.find(s=>!row[s]);
+  if(!next) return {ok:true,action:"complete"};
+  row[next]=p.time;
+  let tardy=false;
+  if(next==="Time In"){ tardy = p.time.slice(0,5) > CONFIG.LATE_AFTER; row.Status = tardy?"Tardy":"Present"; }
+  return {ok:true,action:next,tardy};
+}
+
+/* ============================ DASHBOARD / RECORDS ============================ */
+async function renderDash(){
+  const date=todayStr();
+  const rows = await getDtr(date);
+  const present = rows.filter(r=>r["Time In"]).length;
+  $("#kpis").innerHTML=`
+    <div class="box"><div class="n">${people.length}</div><div class="l">Registered</div></div>
+    <div class="box"><div class="n">${present}</div><div class="l">Checked in today</div></div>
+    <div class="box"><div class="n">${rows.filter(r=>r.Status==="Tardy").length}</div><div class="l">Tardy today</div></div>
+    <div class="box"><div class="n">${rows.filter(r=>r["Time Out"]).length}</div><div class="l">Timed out</div></div>`;
+  $("#dashLog").innerHTML = rows.length ? dtrTableHtml(rows) : `<p class="muted">No check-ins yet today.</p>`;
+}
+async function renderRecords(){
+  if(!$("#recDate").value) $("#recDate").value=todayStr();
+  const rows=await getDtr($("#recDate").value);
+  $("#dtrTable").innerHTML = rows.length ? dtrTableHtml(rows) : `<p class="muted">No records for this date.</p>`;
+  $("#peopleTable").innerHTML = people.length ? peopleTableHtml() : `<p class="muted">No one registered yet.</p>`;
+}
+$("#recDate").addEventListener("change",renderRecords);
+function dtrTableHtml(rows){
+  const head=`<tr><th>Name</th><th>Dept</th><th>Time In</th><th>Break Out</th><th>Break In</th><th>Time Out</th><th>Status</th></tr>`;
+  const body=rows.map(r=>`<tr><td>${r.name||""}</td><td>${r.department||""}</td>
+    <td>${(r["Time In"]||"").slice(0,5)}</td><td>${(r["Break Out"]||"").slice(0,5)}</td>
+    <td>${(r["Break In"]||"").slice(0,5)}</td><td>${(r["Time Out"]||"").slice(0,5)}</td>
+    <td><span class="chip ${r.Status==="Tardy"?"warn":r.Status==="Absent"?"bad":"ok"}">${r.Status||"Present"}</span></td></tr>`).join("");
+  return `<table>${head}${body}</table>`;
+}
+function peopleTableHtml(){
+  const head=`<tr><th>ID</th><th>Name</th><th>Dept</th><th>Sex</th><th>Face</th></tr>`;
+  const body=people.map(p=>`<tr><td>${p.idNo}</td><td>${p.fullName}</td><td>${p.department}</td><td>${p.sex||""}</td>
+    <td><span class="chip ${p.descriptor?"ok":"bad"}">${p.descriptor?"enrolled":"none"}</span></td></tr>`).join("");
+  return `<table>${head}${body}</table>`;
+}
+
+/* ============================ API (n8n) + DEMO ============================ */
+async function api(action,payload={}){
+  if(CONFIG.DEMO_MODE) return demoApi(action,payload);
+  try{
+    const res=await fetch(CONFIG.N8N_BASE+"/cafeteria",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,...payload})});
+    return await res.json();
+  }catch(e){ return {ok:false,reason:"Network error — is n8n reachable?"}; }
+}
+async function getDtr(date){
+  if(CONFIG.DEMO_MODE) return dtr.filter(d=>d.date===date);
+  const r=await api("att-dtr",{date}); return r.ok ? (r.rows||[]) : [];
+}
+function demoApi(action,p){
+  switch(action){
+    case "att-register": return {ok:true};
+    case "att-punch": return demoPunch(p);
+    case "att-dtr": return {ok:true, rows: dtr.filter(d=>d.date===p.date)};
+    case "att-people": return {ok:true, people};
+    default: return {ok:false,reason:"Unknown action"};
+  }
+}
+
+/* ============================ SETTINGS ============================ */
+function syncSettings(){
+  $("#sDemo").value=String(CONFIG.DEMO_MODE); $("#sN8n").value=CONFIG.N8N_BASE;
+  $("#sThresh").value=CONFIG.MATCH_THRESHOLD; $("#sCooldown").value=CONFIG.COOLDOWN_SEC;
+  $("#sLate").value=CONFIG.LATE_AFTER; $("#sDevice").value=CONFIG.DEVICE; $("#sModel").value=CONFIG.MODEL_URL;
+  $("#modePill").textContent=CONFIG.DEMO_MODE?"Demo mode":"Live"; $("#modePill").className="pill "+(CONFIG.DEMO_MODE?"off":"on");
+  $("#cdLbl").textContent=CONFIG.COOLDOWN_SEC;
+}
+$("#saveSettings").addEventListener("click",async()=>{
+  CONFIG.DEMO_MODE=$("#sDemo").value==="true"; CONFIG.N8N_BASE=$("#sN8n").value.trim();
+  CONFIG.MATCH_THRESHOLD=Number($("#sThresh").value)||0.5; CONFIG.COOLDOWN_SEC=Number($("#sCooldown").value)||60;
+  CONFIG.LATE_AFTER=$("#sLate").value.trim()||"08:00"; CONFIG.DEVICE=$("#sDevice").value.trim()||"Attendance Laptop";
+  CONFIG.MODEL_URL=$("#sModel").value.trim()||CONFIG.MODEL_URL;
+  buildMatcher(); syncSettings();
+  if(!CONFIG.DEMO_MODE){ const r=await api("att-people",{}); if(r.ok&&r.people){ people=r.people.map(normPerson); buildMatcher(); } }
+  toast("Settings saved");
+});
+function normPerson(x){
+  return {idNo:x.idNo||x["ID No"], fullName:x.fullName||x["Full Name"], department:x.department||x.Department,
+    sex:x.sex||x.Sex, descriptor: typeof x.descriptor==="string"?JSON.parse(x.descriptor):x.descriptor};
+}
+
+/* ============================ BOOT ============================ */
+function boot(){
+  fillDepartments(); syncSettings(); loadModels();
+  $("#recDate").value=todayStr();
+  renderDash();
+}
+boot();
+</script>
+</body>
+</html>

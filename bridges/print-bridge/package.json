@@ -1,0 +1,14 @@
+{
+  "name": "cafeteria-print-bridge",
+  "version": "1.0.0",
+  "description": "Local ESC/POS bridge for the XP-58IIH receipt printer",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "node-thermal-printer": "^4.4.4"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "School Portal — Cashless & Attendance",
+  "short_name": "School Portal",
+  "description": "Unified portal for cashless cafeteria payments and facial/RFID attendance.",
+  "start_url": "portal.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#14213d",
+  "theme_color": "#14213d",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

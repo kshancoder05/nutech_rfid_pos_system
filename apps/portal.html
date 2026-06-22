@@ -1,0 +1,907 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14213d">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>School Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14213d; --ink2:#1d2c4f; --paper:#f5f7fb; --card:#ffffff;
+    --gold:#dba600; --gold-d:#b8860b; --teal:#0f8a86; --rose:#d2566a;
+    --line:#e3e8f1; --muted:#6b7892; --text:#1a2438;
+    --disp:"Space Grotesk",system-ui,sans-serif;
+    --body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:ui-monospace,"SF Mono","Roboto Mono",Menlo,monospace;
+    --r:14px; --sh:0 1px 3px rgba(20,33,61,.06),0 8px 24px rgba(20,33,61,.05);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--paper);color:var(--text);font-family:var(--body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:var(--disp);margin:0;letter-spacing:-.01em}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  button{font-family:inherit;cursor:pointer}
+  .hidden{display:none!important}
+
+  /* ---------- LOGIN ---------- */
+  #login{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:22px;
+    background:radial-gradient(1200px 600px at 50% -10%,#1d2c4f 0%,#14213d 55%,#0f192e 100%)}
+  .login-card{width:100%;max-width:400px;background:var(--card);border-radius:20px;padding:30px 26px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+  .brand{display:flex;align-items:center;gap:11px;margin-bottom:6px}
+  .brand .mk{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--ink),var(--ink2));display:grid;place-items:center;color:var(--gold);font-family:var(--disp);font-weight:700;font-size:1.1rem}
+  .brand b{font-family:var(--disp);font-size:1.18rem;color:var(--ink)}
+  .brand small{display:block;color:var(--muted);font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;font-weight:600}
+  .login-card h1{font-size:1.15rem;margin:18px 0 4px}
+  .login-card p.sub{color:var(--muted);font-size:.86rem;margin:0 0 18px}
+  .roles{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px}
+  .role{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:13px 12px;text-align:left;transition:.15s}
+  .role:hover{border-color:#c3ccdc}
+  .role[aria-pressed="true"]{border-color:var(--ink);background:#f3f6fc;box-shadow:inset 0 0 0 1px var(--ink)}
+  .role .t{font-weight:700;font-size:.92rem}
+  .role .d{color:var(--muted);font-size:.72rem;margin-top:1px}
+  label{display:block;font-size:.76rem;font-weight:600;color:var(--muted);margin-bottom:6px}
+  input,select{width:100%;border:1.5px solid var(--line);border-radius:11px;padding:11px 13px;font-size:.95rem;font-family:inherit;background:#fff;color:var(--text)}
+  input:focus,select:focus{outline:none;border-color:var(--ink)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:11px;padding:12px 16px;font-weight:700;font-size:.95rem}
+  .btn-primary{background:var(--ink);color:#fff;width:100%}
+  .btn-primary:hover{background:var(--ink2)}
+  .btn-ghost{background:#eef1f7;color:var(--ink)}
+  .hint{margin-top:14px;font-size:.74rem;color:var(--muted);text-align:center;line-height:1.6}
+  .hint code{font-family:var(--mono);background:#eef1f7;padding:1px 6px;border-radius:5px;color:var(--ink)}
+
+  /* ---------- APP SHELL ---------- */
+  #app{min-height:100dvh;display:grid;grid-template-columns:230px 1fr}
+  @media(max-width:860px){#app{grid-template-columns:1fr}}
+  aside{background:var(--ink);color:#cdd6e8;padding:18px 14px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100dvh}
+  @media(max-width:860px){aside{position:static;height:auto;flex-direction:row;overflow-x:auto;gap:6px;padding:10px}}
+  aside .brand{margin:2px 6px 16px}
+  aside .brand b{color:#fff}@media(max-width:860px){aside .brand{display:none}}
+  .nav{display:flex;align-items:center;gap:10px;color:#aeb9d2;padding:10px 12px;border-radius:10px;font-weight:600;font-size:.9rem;white-space:nowrap;border:none;background:none;width:100%;text-align:left}
+  .nav:hover{background:#1d2c4f;color:#fff}
+  .nav[aria-current="true"]{background:var(--gold);color:#241c00}
+  aside .spacer{flex:1}@media(max-width:860px){aside .spacer{display:none}}
+  .who{font-size:.74rem;color:#8b97b4;padding:8px 12px;border-top:1px solid #243456;margin-top:6px}
+  @media(max-width:860px){.who{display:none}}
+  main{padding:24px 26px 60px;max-width:1080px}
+  @media(max-width:560px){main{padding:16px 14px 50px}}
+  .pagehead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+  .pagehead h1{font-size:1.5rem}
+  .pagehead .date{color:var(--muted);font-size:.84rem;font-family:var(--mono)}
+
+  .grid{display:grid;gap:14px}
+  .kpis{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:760px){.kpis{grid-template-columns:1fr 1fr}}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:15px 16px;box-shadow:var(--sh)}
+  .kpi .l{font-size:.72rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+  .kpi .n{font-family:var(--mono);font-size:1.7rem;font-weight:700;margin-top:5px;letter-spacing:-.02em}
+  .kpi .n.gold{color:var(--gold-d)} .kpi .n.teal{color:var(--teal)}
+
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+  .panel h2{font-size:1rem;padding:15px 18px;border-bottom:1px solid var(--line)}
+  .panel .body{padding:6px 18px 14px}
+  .two{display:grid;grid-template-columns:1.3fr 1fr;gap:14px}
+  @media(max-width:860px){.two{grid-template-columns:1fr}}
+
+  table{width:100%;border-collapse:collapse;font-size:.86rem}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;padding:10px 6px;border-bottom:1px solid var(--line)}
+  td{padding:10px 6px;border-bottom:1px solid #eef1f7;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .pill{display:inline-block;font-size:.68rem;font-weight:700;padding:2px 9px;border-radius:20px}
+  .pill.in{background:#e6f4f1;color:#0c6e6a}.pill.out{background:#fbeec9;color:#8a6a00}
+  .pill.tardy{background:#fbe3e8;color:#a83048}.pill.ok{background:#e6f4ec;color:#1f7a48}.pill.off{background:#fbe3e8;color:#a83048}
+  .empty{padding:26px 18px;text-align:center;color:var(--muted);font-size:.86rem}
+
+  /* ---------- CLIENT ID CARD (signature) ---------- */
+  .idcard{position:relative;border-radius:18px;padding:20px;color:#fff;overflow:hidden;
+    background:linear-gradient(135deg,#1d2c4f 0%,#14213d 60%,#0f192e 100%);box-shadow:0 14px 34px rgba(20,33,61,.3)}
+  .idcard::after{content:"";position:absolute;right:-40px;top:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(219,166,0,.22),transparent 70%)}
+  .idcard .chip{width:38px;height:28px;border-radius:6px;background:linear-gradient(135deg,#e9c75a,#b8860b);position:relative}
+  .idcard .chip::before{content:"";position:absolute;inset:6px 8px;border:1px solid rgba(0,0,0,.25);border-radius:2px}
+  .idcard .row1{display:flex;justify-content:space-between;align-items:flex-start}
+  .idcard .role{font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:#9fb0d4;font-weight:700}
+  .idcard .name{font-family:var(--disp);font-size:1.5rem;font-weight:700;margin-top:14px;letter-spacing:-.01em}
+  .idcard .meta{font-family:var(--mono);font-size:.78rem;color:#aeb9d6;margin-top:3px}
+  .idcard .foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:20px}
+  .idcard .bal-l{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:#9fb0d4;font-weight:700}
+  .idcard .bal{font-family:var(--mono);font-size:2rem;font-weight:700;color:#f3d985;line-height:1}
+  .idcard .statuspill{font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.14)}
+  .children{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .child{border:1.5px solid var(--line);background:#fff;border-radius:30px;padding:7px 14px;font-weight:600;font-size:.85rem}
+  .child[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:#fff}
+  .sectitle{font-family:var(--disp);font-weight:600;font-size:.95rem;margin:20px 2px 8px;color:var(--ink)}
+
+  .bars{display:flex;align-items:flex-end;gap:8px;height:120px;padding:8px 2px 0}
+  .bar{flex:1;background:linear-gradient(180deg,#2a3d66,#14213d);border-radius:6px 6px 0 0;min-height:4px;position:relative}
+  .bar span{position:absolute;bottom:-19px;left:0;right:0;text-align:center;font-size:.64rem;color:var(--muted);font-family:var(--mono)}
+  .bar b{position:absolute;top:-17px;left:0;right:0;text-align:center;font-size:.62rem;color:var(--muted);font-family:var(--mono);font-weight:600}
+
+  .subtabs{display:flex;gap:6px;margin:2px 0 16px;flex-wrap:wrap}
+  .subtab{border:1.5px solid var(--line);background:#fff;border-radius:30px;padding:7px 16px;font-weight:600;font-size:.85rem;color:var(--muted)}
+  .subtab[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:#fff}
+  .menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+  .mitem{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;text-align:left;transition:.12s}
+  .mitem:hover{border-color:var(--ink);box-shadow:var(--sh)}
+  .mitem .mn{font-weight:700;font-size:.88rem}
+  .mitem .mc{color:var(--muted);font-size:.72rem}
+  .mitem .mp{font-family:var(--mono);font-weight:700;color:var(--gold-d);margin-top:6px}
+  .cart-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #eef1f7;font-size:.88rem}
+  .qty{display:inline-flex;align-items:center;gap:9px}
+  .qbtn{width:25px;height:25px;border-radius:7px;border:1px solid var(--line);background:#fff;font-weight:700;line-height:1}
+  .drop{display:block;border:2px dashed var(--line);border-radius:12px;padding:18px;text-align:center;color:var(--muted);font-size:.84rem;cursor:pointer}
+  .drop:hover{border-color:#c3ccdc}
+  .proofthumb{width:46px;height:46px;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:pointer}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 18px;border-radius:11px;font-size:.88rem;opacity:0;transition:.25s;pointer-events:none;z-index:50}
+  .toast.show{opacity:1}
+  .logout{margin-top:6px}
+  .modechip{font-family:var(--mono);font-size:.66rem;padding:3px 8px;border-radius:20px;background:#eef1f7;color:var(--muted)}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px}
+  .switch{position:relative;display:inline-block;width:48px;height:28px;flex:none}
+  .switch input{opacity:0;width:0;height:0}
+  .slider{position:absolute;cursor:pointer;inset:0;background:#cfd6e4;border-radius:28px;transition:.2s}
+  .slider:before{content:"";position:absolute;height:22px;width:22px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+  .switch input:checked + .slider{background:#1a8f3c}
+  .switch input:checked + .slider:before{transform:translateX(20px)}
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN ===================== -->
+<section id="login">
+  <div class="login-card">
+    <div class="brand"><div class="mk">S</div><div><b>School Portal</b><small>Cashless · Attendance</small></div></div>
+    <h1>Sign in</h1>
+    <p class="sub">Choose how you're using the portal today.</p>
+    <div class="roles">
+      <button class="role" data-role="Admin" aria-pressed="false"><div class="t">Admin</div><div class="d">Run & oversee the system</div></button>
+      <button class="role" data-role="Student" aria-pressed="false"><div class="t">Student</div><div class="d">My wallet & attendance</div></button>
+      <button class="role" data-role="Parent" aria-pressed="false"><div class="t">Parent</div><div class="d">My child's activity</div></button>
+      <button class="role" data-role="Personnel" aria-pressed="false"><div class="t">Personnel</div><div class="d">My daily time record</div></button>
+    </div>
+    <div id="loginFields" class="hidden">
+      <div id="pinWrap" class="hidden" style="margin-bottom:12px">
+        <label for="pin">Admin PIN</label>
+        <input id="pin" type="password" inputmode="numeric" placeholder="••••" autocomplete="off">
+      </div>
+      <div id="idWrap" class="hidden" style="margin-bottom:12px">
+        <label for="loginId" id="idLabel">ID number</label>
+        <select id="loginId"></select>
+      </div>
+      <button class="btn btn-primary" id="signin">Sign in</button>
+    </div>
+    <p class="hint" id="loginHint">Demo mode — pick a role to continue. Admin PIN is <code>1234</code>.</p>
+  </div>
+</section>
+
+<!-- ===================== APP ===================== -->
+<section id="app" class="hidden">
+  <aside>
+    <div class="brand"><div class="mk">S</div><div><b>School Portal</b></div></div>
+    <nav id="nav"></nav>
+    <div class="spacer"></div>
+    <div class="who" id="whoami"></div>
+    <button class="nav logout" id="logout">Sign out</button>
+  </aside>
+  <main id="main"></main>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================ CONFIG ============================ */
+/* Same backend as the cafeteria POS — one webhook, one Airtable.
+   Flip DEMO_MODE to false (or use the toggle in Settings) to go live. */
+const CONFIG = {
+  DEMO_MODE: true,
+  N8N_BASE: "https://bernard100.app.n8n.cloud/webhook/cafeteria",
+  ADMIN_PIN: "1234",
+};
+try{ const s=JSON.parse(localStorage.getItem("schoolPortal")||"{}"); Object.assign(CONFIG,s); }catch(e){}
+function saveConfig(){ try{ localStorage.setItem("schoolPortal",JSON.stringify(CONFIG)); }catch(e){} }
+/* ================= BACKEND CONTRACT — linked to the cafeteria POS =================
+   Live mode POSTs {action,...} to the SAME /cafeteria webhook the POS uses.
+   liveApi() translates portal actions onto the POS's PROVEN actions:
+
+   REUSED (already working in your n8n — no new work):
+   • menu                  -> { ok, menu:[{name,price,cat|category,available?}] }   (normalized in-app)
+   • order  {id,items,total,payMode}   --sent as-->  purchase {accountId,studentId,items,total,payMode,by}
+                            expects { ok, balanceAfter | student.balance, txnId }
+   • credit-approve (Approved)         --also calls-->  topup {accountId,amount,by}
+   • client-data (fallback)            --uses-->  account-info {accountId,rfid}  -> { ok, account:{ownerName,balance,...} }
+
+   STILL NEEDS A SMALL n8n NODE (portal-specific reads/writes the POS never had):
+   • admin-overview        -> { ok, kpis:{people,salesToday,txns,present}, salesByDay:[{d,total}],
+                               recentTxns:[{ref,name,type,amount,time}], attendance:[{name,dept,in,out,status}], inventory:[] }
+   • client-data {role,id} -> { ok, profile, balance, receipts:[...], attendance:[...] }  (parent: children:[bundles])
+                              (without it the portal still shows card+balance via account-info)
+   • salary {id}           -> { ok, total, items:[{ref,items,amount,time}] }
+   • credit-request {requester,requesterId,targetName,targetId,amount,proof(base64)} -> { ok, entry }
+   • credit-requests {status} -> { ok, requests:[...] }
+   • credit-approve {entry,decision,by} -> { ok }   (money movement handled by topup above)
+
+   NEW Airtable table for the credit feature — CREDIT_REQUESTS:
+     Entry (primary), Requester, Requester ID, Target Account, Target Name, Amount (currency),
+     Proof (attachment), Status (Pending/Approved/Rejected), Requested (dateTime), Decided By, Note  */
+
+/* ============================ DEMO DATA ============================ */
+const today = new Date().toLocaleDateString("en-CA");
+const DEMO = {
+  ids: {
+    Student:[{id:"2026-0500",name:"Maria Santos"}],
+    Personnel:[{id:"EMP-014",name:"R. dela Cruz"}],
+    Parent:[{id:"PAR-021",name:"Mrs. Santos"}],
+  },
+  overview:{
+    kpis:{people:128, salesToday:4860, txns:73, present:112},
+    salesByDay:[{d:"Mon",total:5200},{d:"Tue",total:4100},{d:"Wed",total:6050},{d:"Thu",total:3900},{d:"Fri",total:4860}],
+    recentTxns:[
+      {ref:"OR-260620-101455",name:"Maria Santos",type:"Purchase",amount:55,time:"10:14"},
+      {ref:"LD-260620-095530",name:"Maria Santos",type:"Top-up",amount:200,time:"09:55"},
+      {ref:"OR-260620-094012",name:"J. Reyes",type:"Purchase",amount:38,time:"09:40"},
+      {ref:"OR-260620-090233",name:"A. Bautista",type:"Purchase",amount:72,time:"09:02"},
+    ],
+    attendance:[
+      {name:"Maria Santos",dept:"Student",in:"07:42",out:"",status:"Present"},
+      {name:"R. dela Cruz",dept:"Faculty",in:"07:05",out:"",status:"Present"},
+      {name:"L. Garcia",dept:"Student",in:"08:13",out:"",status:"Tardy"},
+      {name:"P. Aquino",dept:"Security",in:"06:30",out:"",status:"Present"},
+    ],
+    inventory:[
+      {name:"Rice meal",price:45,category:"Meals",available:true},
+      {name:"Fried chicken",price:55,category:"Meals",available:true},
+      {name:"Bottled water",price:15,category:"Drinks",available:true},
+      {name:"Juice",price:20,category:"Drinks",available:true},
+      {name:"Banana cue",price:12,category:"Snacks",available:false},
+      {name:"Pancit",price:38,category:"Meals",available:true},
+    ],
+  },
+  client:{
+    "2026-0500":{
+      profile:{name:"Maria Santos",id:"2026-0500",role:"Student",dept:"Grade 7 · Rizal",status:"Active"},
+      balance:320,
+      receipts:[
+        {ref:"OR-260620-101455",type:"Purchase",amount:55,items:"Fried chicken, Juice",time:"Today 10:14"},
+        {ref:"LD-260620-095530",type:"Top-up",amount:200,items:"—",time:"Today 09:55"},
+        {ref:"OR-260619-120300",type:"Purchase",amount:45,items:"Rice meal",time:"Yesterday 12:03"},
+      ],
+      attendance:[
+        {date:today,timeIn:"07:42",breakOut:"",breakIn:"",timeOut:"",status:"Present"},
+        {date:"2026-06-19",timeIn:"07:38",breakOut:"",breakIn:"",timeOut:"16:05",status:"Present"},
+        {date:"2026-06-18",timeIn:"08:11",breakOut:"",breakIn:"",timeOut:"16:02",status:"Tardy"},
+      ],
+    },
+    "EMP-014":{
+      profile:{name:"R. dela Cruz",id:"EMP-014",role:"Personnel",dept:"Faculty",status:"Active"},
+      balance:null,
+      receipts:[
+        {ref:"OR-260620-113001",type:"Purchase",amount:65,items:"Rice meal, Fried chicken",time:"Today 11:30"},
+        {ref:"OR-260618-121500",type:"Purchase",amount:45,items:"Rice meal",time:"Jun 18 12:15"},
+        {ref:"OR-260616-120100",type:"Purchase",amount:55,items:"Fried chicken",time:"Jun 16 12:01"},
+      ],
+      attendance:[
+        {date:today,timeIn:"07:05",breakOut:"12:00",breakIn:"12:58",timeOut:"",status:"Present"},
+        {date:"2026-06-19",timeIn:"07:01",breakOut:"12:02",breakIn:"12:55",timeOut:"17:00",status:"Present"},
+      ],
+    },
+  },
+  parents:{ "PAR-021":{ profile:{name:"Mrs. Santos",id:"PAR-021",role:"Parent"}, childIds:["2026-0500"] } },
+  menu:[
+    {name:"Rice meal",price:45,category:"Meals"},{name:"Fried chicken",price:55,category:"Meals"},
+    {name:"Pancit",price:38,category:"Meals"},{name:"Bottled water",price:15,category:"Drinks"},
+    {name:"Juice",price:20,category:"Drinks"},{name:"Banana cue",price:12,category:"Snacks"},
+    {name:"Siopao",price:30,category:"Snacks"},{name:"Coffee",price:25,category:"Drinks"},
+  ],
+  creditRequests:[
+    {entry:"CR-0001",requester:"Mrs. Santos",requesterId:"PAR-021",targetName:"Maria Santos",targetId:"2026-0500",amount:300,status:"Pending",requested:"Today 08:40",proof:null},
+  ],
+};
+
+/* ============================ HELPERS ============================ */
+const $=s=>document.querySelector(s);
+const peso=n=>"₱"+Number(n||0).toLocaleString("en-PH");
+const niceDate=new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
+let toastT; function toast(m){const t=$("#toast");t.textContent=m;t.className="toast show";clearTimeout(toastT);toastT=setTimeout(()=>t.className="toast",2200);}
+
+/* ============================ API ============================ */
+/* api() routes every portal action. In live mode it speaks the SAME protocol
+   as the cafeteria POS: a POST to /cafeteria with {action,...}. Portal actions
+   are translated onto the POS's proven actions where they overlap. */
+async function api(action,payload={}){
+  if(CONFIG.DEMO_MODE) return demoApi(action,payload);
+  return liveApi(action,payload);
+}
+/* raw POST to the cafeteria webhook — mirrors the old POS exactly */
+async function post(action,payload={}){
+  try{
+    const base=CONFIG.N8N_BASE.replace(/\/+$/,"");
+    const endpoint=base.endsWith("/cafeteria")?base:base+"/cafeteria";
+    const res=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,...payload})});
+    if(!res.ok) return {ok:false,reason:`Server error ${res.status}`};
+    return await res.json();
+  }catch(e){ return {ok:false,reason:"Cannot reach n8n. Check the webhook URL."}; }
+}
+/* translate portal actions -> proven cafeteria backend actions */
+async function liveApi(action,p){
+  switch(action){
+    case "menu":{
+      const r=await post("menu",{});
+      if(r.ok&&r.menu) r.menu=r.menu.map(m=>({name:m.name,price:m.price,category:m.category||m.cat||"",available:m.available!==false}));
+      return r;
+    }
+    case "order":{                        // -> purchase (decrements wallet / books salary)
+      const r=await post("purchase",{accountId:p.id,studentId:p.id,items:p.items,total:p.total,payMode:p.payMode,by:"Portal"});
+      if(!r.ok) return r;
+      const bal=r.balanceAfter!=null?r.balanceAfter:(r.student?r.student.balance:null);
+      return {ok:true,ref:r.txnId||r.ref||"OK",balance:bal};
+    }
+    case "client-data": return clientDataLive(p);
+    case "credit-approve":{               // record decision, then load wallet via proven topup
+      const dec=await post("credit-approve",p);
+      if(p.decision==="Approved"&&p.targetId&&p.amount){
+        await post("topup",{accountId:p.targetId,amount:p.amount,by:p.by||"Admin"});
+      }
+      return dec&&dec.ok?dec:{ok:true};
+    }
+    // pass-through (these are portal-specific reads/writes — see "needs a node" list)
+    case "admin-overview":
+    case "credit-request":
+    case "credit-requests":
+    case "salary":
+    default: return post(action,p);
+  }
+}
+/* Build a client bundle. Prefer a real client-data node; if absent, fall back to
+   the POS's proven account-info so the card + balance still show live. */
+async function clientDataLive(p){
+  const r=await post("client-data",{role:p.role,id:p.id});
+  if(r&&r.ok) return r;
+  const a=await post("account-info",{accountId:p.id,rfid:p.id});
+  if(a&&a.ok&&a.account){
+    return {ok:true,profile:{name:a.account.ownerName||p.id,id:a.account.accountId||p.id,role:p.role,dept:a.account.ownerType||"",status:a.account.status||"Active"},
+      balance:(a.account.balance!=null?a.account.balance:null),receipts:[],attendance:[]};
+  }
+  return r||{ok:false,reason:"No record found"};
+}
+function demoApi(action,p){
+  if(action==="admin-overview") return {ok:true,...DEMO.overview};
+  if(action==="client-data"){
+    if(p.role==="Parent"){
+      const par=DEMO.parents[p.id]; if(!par) return {ok:false,reason:"Parent not found"};
+      return {ok:true,role:"Parent",profile:par.profile,children:par.childIds.map(cid=>DEMO.client[cid])};
+    }
+    const b=DEMO.client[p.id]; return b?{ok:true,...b}:{ok:false,reason:"No record found"};
+  }
+  if(action==="menu") return {ok:true,menu:DEMO.menu};
+  if(action==="order"){
+    const items=p.items||[]; const total=Number(p.total||0);
+    const ref="OR-"+Date.now().toString().slice(-8);
+    const b=DEMO.client[p.id];
+    if(p.payMode==="wallet"){
+      if(!b) return {ok:false,reason:"Account not found"};
+      if((b.balance||0)<total) return {ok:false,reason:"Not enough balance"};
+      b.balance-=total;
+    }
+    if(b) b.receipts.unshift({ref,type:"Purchase",amount:total,items:items.map(i=>i.name+(i.qty>1?" ×"+i.qty:"")).join(", "),time:"Just now"});
+    return {ok:true,ref,balance:b?b.balance:null};
+  }
+  if(action==="credit-request"){
+    const e="CR-"+Date.now().toString().slice(-5);
+    DEMO.creditRequests.unshift({entry:e,requester:p.requester,requesterId:p.requesterId,targetName:p.targetName,targetId:p.targetId,amount:Number(p.amount),status:"Pending",requested:"Just now",proof:p.proof||null});
+    return {ok:true,entry:e};
+  }
+  if(action==="credit-requests") return {ok:true,requests:DEMO.creditRequests.filter(r=>!p.status||r.status===p.status)};
+  if(action==="credit-approve"){
+    const r=DEMO.creditRequests.find(x=>x.entry===p.entry); if(!r) return {ok:false,reason:"Request not found"};
+    r.status=p.decision; r.decidedBy=p.by||"Admin";
+    if(p.decision==="Approved"){ const b=DEMO.client[r.targetId]; if(b&&b.balance!=null) b.balance+=r.amount; }
+    return {ok:true};
+  }
+  if(action==="salary"){
+    const b=DEMO.client[p.id]; if(!b) return {ok:false,reason:"Not found"};
+    const items=(b.receipts||[]).filter(x=>x.type==="Purchase");
+    return {ok:true,total:items.reduce((s,x)=>s+x.amount,0),items};
+  }
+  if(action==="register-person"){
+    const accountId="ACC-"+Date.now().toString(36).toUpperCase().slice(-8);
+    DEMO.registry=DEMO.registry||[];
+    DEMO.registry.unshift({accountId,role:p.ownerType,name:p.ownerName,id:p.roleId,when:"Just now"});
+    return {ok:true,accountId,roleId:p.roleId,registry:DEMO.registry};
+  }
+  return {ok:false,reason:"Unknown action"};
+}
+
+/* ============================ AUTH ============================ */
+let session=null, selectedRole=null;
+document.querySelectorAll(".role").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".role").forEach(x=>x.setAttribute("aria-pressed","false"));
+  b.setAttribute("aria-pressed","true"); selectedRole=b.dataset.role;
+  $("#loginFields").classList.remove("hidden");
+  const admin=selectedRole==="Admin";
+  $("#pinWrap").classList.toggle("hidden",!admin);
+  $("#idWrap").classList.toggle("hidden",admin);
+  if(!admin){
+    $("#idLabel").textContent = selectedRole==="Parent"?"Parent ID":"ID number";
+    const list=DEMO.ids[selectedRole]||[];
+    $("#loginId").innerHTML=list.map(x=>`<option value="${x.id}">${x.name} · ${x.id}</option>`).join("");
+  }
+  $("#loginHint").innerHTML = admin ? "Demo mode — Admin PIN is <code>1234</code>."
+    : "Demo mode — a sample identity is pre-filled so you can sign straight in.";
+}));
+$("#signin").addEventListener("click",signIn);
+$("#pin").addEventListener("keydown",e=>{if(e.key==="Enter")signIn();});
+function signIn(){
+  if(!selectedRole) return;
+  if(selectedRole==="Admin"){
+    if($("#pin").value!==CONFIG.ADMIN_PIN){ toast("Wrong PIN"); return; }
+    session={role:"Admin",id:null,name:"Administrator"};
+  }else{
+    const id=$("#loginId").value;
+    const nm=($("#loginId").selectedOptions[0]?.textContent||"").split(" · ")[0];
+    session={role:selectedRole,id,name:nm};
+  }
+  $("#login").classList.add("hidden"); $("#app").classList.remove("hidden");
+  startApp();
+}
+$("#logout").addEventListener("click",()=>location.reload());
+
+/* ============================ APP ============================ */
+const ADMIN_NAV=[["dash","Dashboard"],["register","Register"],["cafeteria","Cafeteria"],["credits","Credit Requests"],["attendance","Attendance"],["people","People"],["reports","Reports"],["settings","Settings"]];
+function startApp(){
+  $("#whoami").innerHTML=`Signed in as<br><b style="color:#fff">${session.name}</b> · ${session.role} <span class="modechip">${CONFIG.DEMO_MODE?"demo":"live"}</span>`;
+  if(session.role==="Admin"){
+    $("#nav").innerHTML=ADMIN_NAV.map(([k,l],i)=>`<button class="nav" data-page="${k}" aria-current="${i===0}">${l}</button>`).join("");
+    document.querySelectorAll("#nav .nav").forEach(b=>b.addEventListener("click",()=>{
+      document.querySelectorAll("#nav .nav").forEach(x=>x.setAttribute("aria-current","false"));
+      b.setAttribute("aria-current","true"); renderAdmin(b.dataset.page);
+    }));
+    renderAdmin("dash");
+  }else{
+    $("#nav").innerHTML=`<button class="nav" data-page="settings" id="clientSettingsBtn">Settings</button>`;
+    $("#clientSettingsBtn").addEventListener("click",renderSettings);
+    renderClient();
+  }
+}
+
+/* ---------- SETTINGS (demo/live toggle — every role) ---------- */
+function renderSettings(){
+  const m=$("#main");
+  const d=CONFIG.DEMO_MODE;
+  m.innerHTML=`
+  <div class="card" style="max-width:560px">
+    <h2 style="margin:0 0 4px">Settings</h2>
+    <p style="color:var(--muted);font-size:.85rem;margin:0 0 18px">Controls how this app gets its data.</p>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;border:1px solid var(--line);border-radius:12px;margin-bottom:14px">
+      <div>
+        <b>Connect to live system</b>
+        <div style="color:var(--muted);font-size:.78rem">OFF = demo (sample data, works offline). ON = live (reads/writes real Airtable via n8n).</div>
+      </div>
+      <label class="switch"><input type="checkbox" id="liveToggle" ${d?"":"checked"}><span class="slider"></span></label>
+    </div>
+
+    <div id="liveBox" style="${d?"opacity:.5;pointer-events:none":""}">
+      <label style="display:block;font-size:.8rem;color:var(--muted);margin-bottom:5px">n8n webhook URL</label>
+      <input id="hookUrl" value="${CONFIG.N8N_BASE}" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;font-family:var(--mono,monospace);font-size:.8rem;box-sizing:border-box">
+      <button id="testHook" class="btn btn-ghost" style="margin-top:10px;width:auto">Test connection</button>
+      <span id="testResult" style="margin-left:10px;font-size:.82rem"></span>
+    </div>
+
+    <div style="margin-top:20px;padding:12px;border-radius:10px;background:${d?"#eef1f7":"#e7f7ec"};font-size:.85rem">
+      Status now: <b>${d?"DEMO — safe, no live data":"LIVE — talking to your real system"}</b>
+    </div>
+
+    <button id="saveSettings" class="btn btn-primary" style="margin-top:18px;width:auto">Save</button>
+  </div>`;
+
+  $("#liveToggle").addEventListener("change",e=>{
+    const live=e.target.checked;
+    $("#liveBox").style.opacity=live?"1":".5";
+    $("#liveBox").style.pointerEvents=live?"auto":"none";
+  });
+  $("#testHook")?.addEventListener("click",async()=>{
+    const url=$("#hookUrl").value.trim(); const r=$("#testResult");
+    r.textContent="Testing…"; r.style.color="var(--muted)";
+    const saved=CONFIG.N8N_BASE; CONFIG.N8N_BASE=url;
+    const res=await post("menu",{});
+    CONFIG.N8N_BASE=saved;
+    if(res&&res.ok){ r.textContent="✓ Connected — n8n answered"; r.style.color="#1a8f3c"; }
+    else{ r.textContent="✗ "+(res?.reason||"No answer"); r.style.color="#c0392b"; }
+  });
+  $("#saveSettings").addEventListener("click",()=>{
+    CONFIG.DEMO_MODE=!$("#liveToggle").checked;
+    if(!CONFIG.DEMO_MODE) CONFIG.N8N_BASE=$("#hookUrl").value.trim();
+    saveConfig();
+    toast(CONFIG.DEMO_MODE?"Saved · DEMO mode":"Saved · LIVE mode");
+    startApp();
+  });
+}
+
+/* ---------- ADMIN ---------- */
+async function renderAdmin(page){
+  const m=$("#main");
+  if(page==="credits") return renderCredits();
+  if(page==="register") return renderRegister();
+  if(page==="settings") return renderSettings();
+  m.innerHTML=`<div class="empty">Loading…</div>`;
+  const o=await api("admin-overview");
+  if(!o.ok){ m.innerHTML=`<div class="empty">${o.reason||"Could not load"}</div>`; return; }
+  if(page==="dash") m.innerHTML=adminDash(o);
+  else if(page==="cafeteria") m.innerHTML=adminCafeteria(o);
+  else if(page==="attendance") m.innerHTML=adminAttendance(o);
+  else if(page==="people") m.innerHTML=adminPeople(o);
+  else if(page==="reports") m.innerHTML=adminReports();
+  if(page==="dash") drawBars(o.salesByDay);
+}
+async function renderCredits(){
+  const m=$("#main"); m.innerHTML=`<div class="empty">Loading…</div>`;
+  const r=await api("credit-requests",{status:"Pending"});
+  const reqs=r.ok?r.requests:[];
+  m.innerHTML=head("Credit Requests")+`
+   <div class="panel"><h2>Pending top-up requests — ${reqs.length}</h2><div class="body">${
+     reqs.length ? `<table><thead><tr><th>Ref</th><th>Requested by</th><th>Load to</th><th class="num">Amount</th><th>Proof</th><th></th></tr></thead><tbody>${
+       reqs.map(q=>`<tr>
+         <td class="mono" style="font-size:.74rem">${q.entry}</td>
+         <td>${q.requester}<div style="color:var(--muted);font-size:.72rem">${q.requested}</div></td>
+         <td>${q.targetName}<div style="color:var(--muted);font-size:.72rem">${q.targetId}</div></td>
+         <td class="num">${peso(q.amount)}</td>
+         <td>${q.proof?`<img class="proofthumb" src="${q.proof}" alt="proof" onclick="window.open().document.write('<img src=&quot;'+this.src+'&quot;>')">`:`<span style="color:var(--muted);font-size:.74rem">—</span>`}</td>
+         <td style="text-align:right;white-space:nowrap">
+           <button class="btn btn-primary appr" data-e="${q.entry}" data-amt="${q.amount}" data-tid="${q.targetId}" style="padding:7px 12px;font-size:.8rem">Approve ${peso(q.amount)}</button>
+           <button class="btn btn-ghost rej" data-e="${q.entry}" style="padding:7px 12px;font-size:.8rem;margin-left:4px">Reject</button>
+         </td></tr>`).join("")}</tbody></table>`
+     : `<div class="empty">No pending requests right now.</div>` }
+   </div></div>`;
+  document.querySelectorAll(".appr").forEach(b=>b.addEventListener("click",()=>decide(b.dataset.e,"Approved",+b.dataset.amt,b.dataset.tid)));
+  document.querySelectorAll(".rej").forEach(b=>b.addEventListener("click",()=>decide(b.dataset.e,"Rejected")));
+}
+async function decide(entry,decision,amount,targetId){
+  const r=await api("credit-approve",{entry,decision,by:"Admin",amount,targetId});
+  if(r.ok){ toast(decision==="Approved"?"Approved & loaded":"Request rejected"); renderCredits(); }
+  else toast(r.reason||"Failed");
+}
+function head(t){return `<div class="pagehead"><h1>${t}</h1><div class="date">${niceDate}</div></div>`;}
+
+/* ---------- ADMIN: Register an account (one ACCOUNT + role row) ----------
+   Live: api("register-person", payload) -> your n8n register-person action which:
+     1) generates AccountID (ACC-…), creates ACCOUNT row {Owner Name, Owner Type, RFID UID,
+        FINGERPRINT_ID, FACE_BIO_ID, Balance, Status:Active, STUDENT_ID|PARENT_ID|PERSONNEL_ID = roleId}
+     2) creates the matching STUDENT / PARENT / PERSONNEL row with the shared roleId + details
+     3) returns { ok, accountId, roleId }
+   The same ACCOUNT then serves both POS (RFID + wallet) and access control (face + DTR).        */
+let regRole=null, regCaps={fingerprint:"",face:""};
+function renderRegister(){
+  const m=$("#main");
+  m.innerHTML=head("Register an account")+`
+   <p style="color:var(--muted);margin:-6px 2px 16px;font-size:.9rem">One account, both systems. Pick who you're registering, fill in their details, and capture their card and (optionally) biometrics — it's written to the shared ACCOUNT hub plus the matching role table.</p>
+   <div class="roles" style="max-width:640px;grid-template-columns:repeat(3,1fr)">
+     <button class="role" data-r="Student" aria-pressed="false"><div class="t">Student</div><div class="d">Wallet + attendance</div></button>
+     <button class="role" data-r="Parent" aria-pressed="false"><div class="t">Parent</div><div class="d">Funds a child's wallet</div></button>
+     <button class="role" data-r="Personnel" aria-pressed="false"><div class="t">Personnel</div><div class="d">Salary + DTR</div></button>
+   </div>
+   <div id="regForm"></div>`;
+  regRole=null; regCaps={fingerprint:"",face:""};
+  document.querySelectorAll("#main .role").forEach(b=>b.addEventListener("click",()=>{
+    document.querySelectorAll("#main .role").forEach(x=>x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true"); regRole=b.dataset.r; paintRegForm();
+  }));
+}
+function genUid(){ return Array.from({length:8},()=>"0123456789ABCDEF"[Math.floor(Math.random()*16)]).join(""); }
+function paintRegForm(){
+  const el=$("#regForm"); if(!regRole){el.innerHTML="";return;}
+  const idLabel = regRole==="Student"?"Student ID":regRole==="Personnel"?"Personnel ID":"Parent ID";
+  const idHint  = regRole==="Student"?"2026-0500":regRole==="Personnel"?"EMP-014":"PAR-021";
+  const roleFields = regRole==="Student" ? `
+      <div style="margin-bottom:12px"><label>Section</label><input id="rgSection" placeholder="Grade 7 - Rizal"></div>
+      <div style="margin-bottom:12px"><label>Sex</label><select id="rgSex"><option>Female</option><option>Male</option></select></div>
+      <div style="margin-bottom:12px"><label>Parent ID (optional — links for top-ups)</label><input id="rgParent" placeholder="PAR-021"></div>
+      <div style="margin-bottom:2px"><label>Enrolled this year?</label><select id="rgEnrolled"><option>Yes</option><option>No</option></select></div>`
+    : regRole==="Personnel" ? `
+      <div style="margin-bottom:12px"><label>Role</label><select id="rgPRole"><option>Teacher</option><option>Staff</option></select></div>
+      <div style="margin-bottom:2px"><label>Monthly salary (₱)</label><input id="rgSalary" type="number" placeholder="0"></div>`
+    : `<p style="color:var(--muted);font-size:.8rem;margin-top:4px">A parent account funds its children's wallets and can request top-ups with proof of payment.</p>`;
+  el.innerHTML=`<div class="two" style="margin-top:16px">
+    <div class="panel"><h2>${regRole} details</h2><div class="body">
+      <div style="margin-bottom:12px"><label>Full name</label><input id="rgName" placeholder="Juan dela Cruz"></div>
+      <div style="margin-bottom:12px"><label>${idLabel}</label><input id="rgId" placeholder="${idHint}"></div>
+      <div style="margin-bottom:12px"><label>Contact no.</label><input id="rgContact" type="tel" placeholder="09xx xxx xxxx"></div>
+      <div style="margin-bottom:12px"><label>Email</label><input id="rgEmail" type="email" placeholder="name@email.com"></div>
+      <div style="margin-bottom:12px"><label>Home address</label><input id="rgAddress" placeholder="Brgy, City"></div>
+      ${roleFields}
+    </div></div>
+    <div class="panel"><h2>Card &amp; biometrics</h2><div class="body">
+      <div style="margin-bottom:12px"><label>RFID card UID</label>
+        <div style="display:flex;gap:8px"><input id="rgRfid" placeholder="tap card or type UID" style="flex:1">
+        <button class="btn btn-ghost" id="rgTap" style="width:auto;white-space:nowrap;padding:0 16px">Tap</button></div></div>
+      <button class="btn btn-ghost" id="rgFp" style="width:100%;justify-content:space-between">Capture fingerprint <span id="rgFpS" style="color:var(--muted)">— optional —</span></button>
+      <button class="btn btn-ghost" id="rgFace" style="width:100%;justify-content:space-between;margin-top:8px">Capture face <span id="rgFaceS" style="color:var(--muted)">— optional —</span></button>
+      <div style="margin-top:14px;margin-bottom:12px"><label>${regRole==="Personnel"?"Opening wallet (optional)":"Opening balance (₱)"}</label><input id="rgBalance" type="number" placeholder="0"></div>
+      <button class="btn btn-primary" id="rgSubmit" style="width:100%">Register ${regRole}</button>
+      <p style="color:var(--muted);font-size:.76rem;margin-top:8px">Creates the ACCOUNT (card + wallet + credentials) and the ${regRole} record together, under one shared ID — usable by both POS and attendance.</p>
+      <div id="rgResult"></div>
+    </div></div>
+  </div>`;
+  $("#rgTap").addEventListener("click",()=>{
+    if(CONFIG.DEMO_MODE){ const uid=genUid(); $("#rgRfid").value=uid; toast("Card read · "+uid); }
+    else { $("#rgRfid").focus(); toast("Scan the card on the reader, or type its UID"); }
+  });
+  $("#rgFp").addEventListener("click",()=>{ regCaps.fingerprint="FP-"+Date.now(); $("#rgFpS").textContent="captured ✓"; toast("Fingerprint captured"); });
+  $("#rgFace").addEventListener("click",()=>{ regCaps.face="FACE-"+Date.now(); $("#rgFaceS").textContent="captured ✓"; toast("Face captured"); });
+  $("#rgSubmit").addEventListener("click",submitRegister);
+}
+async function submitRegister(){
+  const name=$("#rgName").value.trim(), id=$("#rgId").value.trim();
+  if(!name){ toast("Enter a name"); return; }
+  if(!id){ toast("Enter the "+regRole+" ID"); return; }
+  const payload={ ownerType:regRole, ownerName:name, roleId:id,
+    contact:$("#rgContact").value.trim(), email:$("#rgEmail").value.trim(), address:$("#rgAddress").value.trim(),
+    rfid:$("#rgRfid").value.trim(), fingerprint:regCaps.fingerprint, face:regCaps.face,
+    initialBalance:Number($("#rgBalance").value)||0 };
+  if(regRole==="Student"){ payload.section=$("#rgSection").value.trim(); payload.sex=$("#rgSex").value; payload.parentId=$("#rgParent").value.trim(); payload.isEnrolled=$("#rgEnrolled").value; }
+  if(regRole==="Personnel"){ payload.pRole=$("#rgPRole").value; payload.salary=Number($("#rgSalary").value)||0; }
+  const btn=$("#rgSubmit"); btn.disabled=true; btn.textContent="Registering…";
+  const r=await api("register-person",payload);
+  if(r.ok){
+    $("#rgResult").innerHTML=`<div style="margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#eef7f2">
+      <div style="font-weight:700;color:var(--teal)">✓ ${regRole} registered</div>
+      <div class="mono" style="font-size:.82rem;margin-top:3px">Account ${r.accountId} · ${id}${payload.rfid?" · card "+payload.rfid:""}</div></div>`;
+    toast("Account created · "+r.accountId);
+    ["rgName","rgId","rgContact","rgEmail","rgAddress","rgRfid","rgBalance","rgSection","rgSalary"].forEach(x=>{const e=$("#"+x);if(e)e.value="";});
+    regCaps={fingerprint:"",face:""};
+    const fp=$("#rgFpS"); if(fp) fp.textContent="— optional —";
+    const fc=$("#rgFaceS"); if(fc) fc.textContent="— optional —";
+    btn.disabled=false; btn.textContent="Register another "+regRole;
+  } else { toast(r.reason||"Registration failed"); btn.disabled=false; btn.textContent="Register "+regRole; }
+}
+function adminDash(o){
+  return head("Dashboard")+`
+  <div class="grid kpis" style="margin-bottom:14px">
+    <div class="kpi"><div class="l">Registered</div><div class="n">${o.kpis.people}</div></div>
+    <div class="kpi"><div class="l">Sales today</div><div class="n gold">${peso(o.kpis.salesToday)}</div></div>
+    <div class="kpi"><div class="l">Transactions</div><div class="n">${o.kpis.txns}</div></div>
+    <div class="kpi"><div class="l">Present today</div><div class="n teal">${o.kpis.present}</div></div>
+  </div>
+  <div class="two">
+    <div class="panel"><h2>This week's cafeteria sales</h2><div class="body"><div class="bars" id="bars"></div></div></div>
+    <div class="panel"><h2>Latest check-ins</h2><div class="body">${attTable(o.attendance.slice(0,5))}</div></div>
+  </div>
+  <div class="panel" style="margin-top:14px"><h2>Recent transactions</h2><div class="body">${txnTable(o.recentTxns)}</div></div>`;
+}
+function adminCafeteria(o){
+  const total=o.inventory.length, avail=o.inventory.filter(i=>i.available).length;
+  return head("Cafeteria")+`
+  <div class="grid kpis" style="margin-bottom:14px;grid-template-columns:repeat(3,1fr)">
+    <div class="kpi"><div class="l">Sales today</div><div class="n gold">${peso(o.kpis.salesToday)}</div></div>
+    <div class="kpi"><div class="l">Transactions</div><div class="n">${o.kpis.txns}</div></div>
+    <div class="kpi"><div class="l">Menu items</div><div class="n">${avail}<span style="font-size:.9rem;color:var(--muted)"> / ${total} on</span></div></div>
+  </div>
+  <div class="two">
+    <div class="panel"><h2>Today's transactions</h2><div class="body">${txnTable(o.recentTxns)}</div></div>
+    <div class="panel"><h2>Inventory</h2><div class="body">${invTable(o.inventory)}</div></div>
+  </div>`;
+}
+function adminAttendance(o){
+  return head("Attendance")+`
+  <div class="grid kpis" style="margin-bottom:14px;grid-template-columns:repeat(3,1fr)">
+    <div class="kpi"><div class="l">Present today</div><div class="n teal">${o.kpis.present}</div></div>
+    <div class="kpi"><div class="l">Tardy</div><div class="n">${o.attendance.filter(a=>a.status==="Tardy").length}</div></div>
+    <div class="kpi"><div class="l">Registered</div><div class="n">${o.kpis.people}</div></div>
+  </div>
+  <div class="panel"><h2>Today's log</h2><div class="body">${attTable(o.attendance)}</div></div>`;
+}
+function adminPeople(o){
+  return head("People")+`
+  <div class="panel"><h2>Registered — ${o.kpis.people} total</h2><div class="body">
+    <p style="color:var(--muted);font-size:.86rem;padding:6px 0">Registration happens at the capture stations (face + card). This view summarizes everyone enrolled across students and personnel.</p>
+    ${attTable(o.attendance)}
+  </div></div>`;
+}
+function adminReports(){
+  return head("Reports")+`
+  <div class="two">
+    <div class="panel"><h2>Cafeteria receipts</h2><div class="body"><p style="color:var(--muted);font-size:.88rem;padding:8px 0 14px">Every sale and top-up is numbered (OR-… / LD-…) and printed on the thermal printer. The full ledger lives in the Transactions table.</p></div></div>
+    <div class="panel"><h2>DepEd SF2</h2><div class="body"><p style="color:var(--muted);font-size:.88rem;padding:8px 0 14px">Monthly Daily Attendance Report of Learners is generated from the attendance records into the official DepEd template.</p></div></div>
+  </div>`;
+}
+function txnTable(rows){
+  if(!rows.length) return `<div class="empty">No transactions yet.</div>`;
+  return `<table><thead><tr><th>Ref</th><th>Name</th><th>Type</th><th class="num">Amount</th><th class="num">Time</th></tr></thead><tbody>${
+    rows.map(r=>`<tr><td class="mono" style="font-size:.78rem">${r.ref}</td><td>${r.name}</td>
+    <td><span class="pill ${r.type==="Top-up"?"in":"out"}">${r.type}</span></td>
+    <td class="num">${peso(r.amount)}</td><td class="num">${r.time}</td></tr>`).join("")}</tbody></table>`;
+}
+function attTable(rows){
+  if(!rows.length) return `<div class="empty">No check-ins yet.</div>`;
+  return `<table><thead><tr><th>Name</th><th>Dept</th><th class="num">In</th><th class="num">Out</th><th>Status</th></tr></thead><tbody>${
+    rows.map(r=>`<tr><td>${r.name}</td><td style="color:var(--muted)">${r.dept}</td>
+    <td class="num">${r.in||"—"}</td><td class="num">${r.out||"—"}</td>
+    <td><span class="pill ${r.status==="Tardy"?"tardy":"ok"}">${r.status}</span></td></tr>`).join("")}</tbody></table>`;
+}
+function invTable(rows){
+  return `<table><thead><tr><th>Item</th><th>Category</th><th class="num">Price</th><th>Status</th></tr></thead><tbody>${
+    rows.map(r=>`<tr><td>${r.name}</td><td style="color:var(--muted)">${r.category}</td>
+    <td class="num">${peso(r.price)}</td>
+    <td><span class="pill ${r.available?"ok":"off"}">${r.available?"On sale":"Out"}</span></td></tr>`).join("")}</tbody></table>`;
+}
+function drawBars(data){
+  const el=$("#bars"); if(!el) return;
+  const max=Math.max(...data.map(d=>d.total));
+  el.innerHTML=data.map(d=>`<div class="bar" style="height:${Math.round(d.total/max*100)}%"><b>${(d.total/1000).toFixed(1)}k</b><span>${d.d}</span></div>`).join("");
+}
+
+/* ---------- CLIENT ---------- */
+let clientBundle=null, activeChild=0, clientTab="overview", cart={};
+async function renderClient(){
+  const m=$("#main"); m.innerHTML=`<div class="empty">Loading…</div>`;
+  const r=await api("client-data",{role:session.role,id:session.id});
+  if(!r.ok){ m.innerHTML=`<div class="empty">${r.reason||"No data found"}</div>`; return; }
+  clientBundle=r; activeChild=0; clientTab="overview"; cart={};
+  paintClient();
+}
+function curData(){ return clientBundle.role==="Parent" ? clientBundle.children[activeChild] : clientBundle; }
+function paintClient(){
+  const m=$("#main"), role=clientBundle.role;
+  const switcher = role==="Parent"
+    ? `<div class="children">${clientBundle.children.map((c,i)=>`<button class="child" data-i="${i}" aria-pressed="${i===activeChild}">${c.profile.name}</button>`).join("")}</div>` : "";
+  const tabs = role==="Personnel"
+    ? [["overview","My Card"],["order","Order"],["salary","Salary"]]
+    : [["overview","My Card"],["order","Order"],["credit","Load Credit"]];
+  const title = role==="Parent" ? `Hello, ${clientBundle.profile.name}` : `Hello, ${curData().profile.name.split(" ")[0]}`;
+  m.innerHTML = head(title) + switcher
+    + `<div class="subtabs">${tabs.map(([k,l])=>`<button class="subtab" data-t="${k}" aria-pressed="${k===clientTab}">${l}</button>`).join("")}</div>`
+    + `<div id="clientContent"></div>`;
+  document.querySelectorAll(".child").forEach(b=>b.addEventListener("click",()=>{activeChild=+b.dataset.i;cart={};paintClient();}));
+  document.querySelectorAll(".subtab").forEach(b=>b.addEventListener("click",()=>{clientTab=b.dataset.t;paintClient();}));
+  paintClientTab();
+}
+function paintClientTab(){
+  const el=$("#clientContent"), d=curData();
+  if(clientTab==="overview") el.innerHTML=clientCard(d)+clientSections(d);
+  else if(clientTab==="order") renderOrder(el,d);
+  else if(clientTab==="credit") renderCredit(el,d);
+  else if(clientTab==="salary") renderSalary(el,d);
+}
+
+/* ---- Ordering ---- */
+async function renderOrder(el,d){
+  el.innerHTML=`<div class="empty">Loading menu…</div>`;
+  const r=await api("menu");
+  paintOrder(el,d,r.ok?r.menu:[]);
+}
+function paintOrder(el,d,menu){
+  const isSalary = clientBundle.role==="Personnel";
+  const items=Object.entries(cart).map(([n,q])=>{const mi=menu.find(m=>m.name===n)||{price:0};return{name:n,qty:q,price:mi.price};});
+  const total=items.reduce((s,i)=>s+i.qty*i.price,0);
+  el.innerHTML=`<div class="two">
+    <div class="panel"><h2>Menu</h2><div class="body"><div class="menu-grid">${
+      menu.map(mi=>`<button class="mitem" data-n="${mi.name}"><div class="mn">${mi.name}</div><div class="mc">${mi.category}</div><div class="mp">${peso(mi.price)}</div></button>`).join("")}</div></div></div>
+    <div class="panel"><h2>${clientBundle.role==="Parent"?"Order for "+d.profile.name.split(" ")[0]:"Your order"}</h2><div class="body">${
+      items.length ? items.map(i=>`<div class="cart-row"><span>${i.name}</span><span class="qty"><button class="qbtn" data-m="${i.name}">−</button><b>${i.qty}</b><button class="qbtn" data-p="${i.name}">+</button><span class="mono" style="margin-left:8px;min-width:54px;text-align:right;display:inline-block">${peso(i.qty*i.price)}</span></span></div>`).join("")
+        : `<div class="empty">Tap items to add them.</div>` }
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px">
+        <div><div style="color:var(--muted);font-size:.72rem">Total</div><div class="mono" style="font-size:1.5rem;font-weight:700">${peso(total)}</div></div>
+        <button class="btn btn-primary" id="placeOrder" ${items.length?"":"disabled"} style="width:auto">${isSalary?"Order — salary deduct":"Pay from wallet"}</button>
+      </div>
+      <p style="color:var(--muted);font-size:.76rem;margin-top:10px">${isSalary
+        ? "Charged to your monthly salary deduction."
+        : `Paid instantly from ${clientBundle.role==="Parent"?d.profile.name.split(" ")[0]+"'s":"your"} wallet${d.balance!=null?" · balance "+peso(d.balance):""}.`}</p>
+    </div></div>
+  </div>`;
+  el.querySelectorAll(".mitem").forEach(b=>b.addEventListener("click",()=>{cart[b.dataset.n]=(cart[b.dataset.n]||0)+1;paintOrder(el,d,menu);}));
+  el.querySelectorAll("[data-p]").forEach(b=>b.addEventListener("click",()=>{cart[b.dataset.p]++;paintOrder(el,d,menu);}));
+  el.querySelectorAll("[data-m]").forEach(b=>b.addEventListener("click",()=>{cart[b.dataset.m]--;if(cart[b.dataset.m]<=0)delete cart[b.dataset.m];paintOrder(el,d,menu);}));
+  const po=el.querySelector("#placeOrder");
+  if(po) po.addEventListener("click",async()=>{
+    po.disabled=true;
+    const r=await api("order",{id:d.profile.id,items,total,payMode:isSalary?"salary":"wallet"});
+    if(r.ok){ toast("Order placed · "+r.ref); cart={}; if(r.balance!=null) d.balance=r.balance; clientTab="overview"; paintClient(); }
+    else { toast(r.reason||"Order failed"); po.disabled=false; }
+  });
+}
+
+/* ---- Load Credit (request with proof of payment) ---- */
+function renderCredit(el,d){
+  const role=clientBundle.role;
+  const targetOpts = role==="Parent"
+    ? `<option value="self">My own account — ${clientBundle.profile.name}</option>`+clientBundle.children.map((c,i)=>`<option value="child:${i}">${c.profile.name} · ${c.profile.id}</option>`).join("")
+    : `<option value="self">My account — ${d.profile.name}</option>`;
+  el.innerHTML=`<div class="two">
+    <div class="panel"><h2>Request a top-up</h2><div class="body">
+      <div style="margin-bottom:12px"><label>Load to</label><select id="crTarget">${targetOpts}</select></div>
+      <div style="margin-bottom:12px"><label>Amount (₱)</label><input id="crAmount" type="number" min="20" placeholder="0"></div>
+      <label>Proof of payment</label>
+      <label class="drop" id="crDrop">Tap to attach a photo of your deposit slip / GCash receipt
+        <input id="crFile" type="file" accept="image/*" hidden></label>
+      <div id="crPreview" style="margin-top:10px"></div>
+      <button class="btn btn-primary" id="crSubmit" style="width:100%;margin-top:14px" disabled>Attach proof to submit</button>
+      <p style="color:var(--muted);font-size:.76rem;margin-top:8px">The admin reviews your proof and approves the amount. It reflects in the wallet once approved.</p>
+    </div></div>
+    <div class="panel"><h2>My requests</h2><div class="body" id="crList"><div class="empty">Loading…</div></div></div>
+  </div>`;
+  let proofData=null;
+  const refresh=()=>{ const ok=proofData&&Number($("#crAmount").value)>0; $("#crSubmit").disabled=!ok; $("#crSubmit").textContent=proofData?"Submit request":"Attach proof to submit"; };
+  $("#crAmount").addEventListener("input",refresh);
+  $("#crDrop").addEventListener("click",()=>$("#crFile").click());
+  $("#crFile").addEventListener("change",e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const rd=new FileReader(); rd.onload=()=>{proofData=rd.result;$("#crPreview").innerHTML=`<img src="${proofData}" style="max-width:150px;border-radius:10px;border:1px solid var(--line)">`;$("#crDrop").firstChild.textContent="Photo attached ✓  ";refresh();}; rd.readAsDataURL(f);
+  });
+  $("#crSubmit").addEventListener("click",async()=>{
+    const sel=$("#crTarget").value; let targetName,targetId;
+    if(sel==="self"){ targetName=role==="Parent"?clientBundle.profile.name:d.profile.name; targetId=role==="Parent"?clientBundle.profile.id:d.profile.id; }
+    else { const i=+sel.split(":")[1]; targetName=clientBundle.children[i].profile.name; targetId=clientBundle.children[i].profile.id; }
+    $("#crSubmit").disabled=true;
+    const r=await api("credit-request",{requester:role==="Parent"?clientBundle.profile.name:d.profile.name,requesterId:session.id,targetName,targetId,amount:Number($("#crAmount").value),proof:proofData});
+    if(r.ok){ toast("Request submitted for approval"); renderCredit(el,d); } else { toast(r.reason||"Failed"); $("#crSubmit").disabled=false; }
+  });
+  api("credit-requests",{}).then(rr=>{
+    const mine=(rr.requests||[]).filter(x=>x.requesterId===session.id);
+    $("#crList").innerHTML = mine.length ? `<table><thead><tr><th>To</th><th class="num">Amount</th><th>Status</th></tr></thead><tbody>${
+      mine.map(x=>`<tr><td>${x.targetName}<div style="color:var(--muted);font-size:.72rem">${x.requested}</div></td><td class="num">${peso(x.amount)}</td>
+      <td><span class="pill ${x.status==="Approved"?"ok":x.status==="Rejected"?"off":"out"}">${x.status}</span></td></tr>`).join("")}</tbody></table>`
+      : `<div class="empty">No requests yet.</div>`;
+  });
+}
+
+/* ---- Personnel salary deduction ---- */
+async function renderSalary(el,d){
+  el.innerHTML=`<div class="empty">Loading…</div>`;
+  const r=await api("salary",{id:d.profile.id});
+  const items=r.ok?r.items:[], total=r.ok?r.total:0;
+  const month=new Date().toLocaleDateString("en-US",{month:"long",year:"numeric"});
+  el.innerHTML=`
+   <div class="grid kpis" style="grid-template-columns:repeat(2,1fr);margin-bottom:14px">
+     <div class="kpi"><div class="l">Deductible this month</div><div class="n gold">${peso(total)}</div></div>
+     <div class="kpi"><div class="l">Cafeteria orders</div><div class="n">${items.length}</div></div>
+   </div>
+   <div class="panel"><h2>${month} — salary deduction</h2><div class="body">${
+     items.length ? `<table><thead><tr><th>Ref</th><th>Items</th><th class="num">Amount</th></tr></thead><tbody>${
+       items.map(i=>`<tr><td class="mono" style="font-size:.74rem">${i.ref}</td><td>${i.items}<div style="color:var(--muted);font-size:.72rem">${i.time}</div></td><td class="num">${peso(i.amount)}</td></tr>`).join("")}
+       <tr><td></td><td style="text-align:right;font-weight:700">Total deductible</td><td class="num" style="font-weight:700">${peso(total)}</td></tr></tbody></table>`
+     : `<div class="empty">No cafeteria charges this month.</div>` }
+     <p style="color:var(--muted);font-size:.76rem;margin-top:10px">Forwarded to payroll and deducted from your salary at month-end.</p>
+   </div>`;
+}
+function clientCard(d){
+  const p=d.profile;
+  const hasWallet=d.balance!==null && d.balance!==undefined;
+  const todayRow=(d.attendance||[]).find(a=>a.date===today);
+  const statusTxt = todayRow ? (todayRow.timeOut?`Out ${todayRow.timeOut}`:`In ${todayRow.timeIn}`) : "No check-in yet";
+  return `<div class="idcard">
+    <div class="row1"><div><div class="role">${p.role}</div></div><div class="chip"></div></div>
+    <div class="name">${p.name}</div>
+    <div class="meta">${p.id}${p.dept?" · "+p.dept:""}</div>
+    <div class="foot">
+      <div>${hasWallet?`<div class="bal-l">Wallet balance</div><div class="bal">${peso(d.balance)}</div>`
+        :`<div class="bal-l">Today</div><div class="bal" style="font-size:1.3rem">${statusTxt}</div>`}</div>
+      <span class="statuspill">${p.status||"Active"}</span>
+    </div>
+  </div>`;
+}
+function clientSections(d){
+  const rec=d.receipts||[], att=d.attendance||[];
+  const recHtml = rec.length ? `<table><thead><tr><th>Ref</th><th>Detail</th><th class="num">Amount</th></tr></thead><tbody>${
+    rec.map(r=>`<tr><td class="mono" style="font-size:.76rem">${r.ref}</td>
+      <td>${r.type==="Top-up"?"Top-up":r.items}<div style="color:var(--muted);font-size:.74rem">${r.time}</div></td>
+      <td class="num" style="color:${r.type==="Top-up"?"var(--teal)":"var(--text)"}">${r.type==="Top-up"?"+":"−"}${peso(r.amount)}</td></tr>`).join("")}</tbody></table>`
+    : `<div class="empty">No receipts yet.</div>`;
+  const attHtml = att.length ? `<table><thead><tr><th>Date</th><th class="num">In</th><th class="num">Out</th><th>Status</th></tr></thead><tbody>${
+    att.map(a=>`<tr><td class="mono" style="font-size:.8rem">${a.date===today?"Today":a.date}</td>
+      <td class="num">${a.timeIn||"—"}</td><td class="num">${a.timeOut||"—"}</td>
+      <td><span class="pill ${a.status==="Tardy"?"tardy":"ok"}">${a.status}</span></td></tr>`).join("")}</tbody></table>`
+    : `<div class="empty">No attendance yet.</div>`;
+  return `<div class="two" style="margin-top:18px">
+    <div class="panel"><h2>${d.balance!=null?"Receipts":"Cafeteria"}</h2><div class="body">${recHtml}</div></div>
+    <div class="panel"><h2>Attendance</h2><div class="body">${attHtml}</div></div>
+  </div>`;
+}
+
+/* ============================ PWA ============================ */
+if("serviceWorker" in navigator){ window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{})); }
+</script>
+</body>
+</html>
