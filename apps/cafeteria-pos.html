@@ -292,7 +292,7 @@
           <button class="btn btn-primary" id="enrollBtn" disabled>Scan a card to link</button>
           <p class="helper">Tap the student's new card on the reader, type their Student ID, then link. An account ID will be generated automatically for the new RFID registration. Re-enrolling replaces a lost card.</p>
 
-          <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--line-2)">
+          <div style="display:none;margin-top:20px;padding-top:18px;border-top:1px solid var(--line-2)">
             <div class="tt" style="margin-bottom:4px">Fingerprint (optional second factor)</div>
             <p class="helper" style="margin-top:0">After the card is linked, capture the student's fingerprint on the DigitalPersona 4500 to require it at checkout. <strong>Biometric data</strong> — collect written consent first.</p>
             <button class="btn btn-primary" id="bioEnrollBtn" disabled style="margin-top:10px">Link a card first</button>
@@ -373,7 +373,7 @@
             </div>
           </div>
 
-          <div style="margin-top:6px;padding-top:18px;border-top:1px solid var(--line-2)">
+          <div style="display:none;margin-top:6px;padding-top:18px;border-top:1px solid var(--line-2)">
             <div class="toggle-row" style="margin-bottom:10px">
               <div><div class="tt">Require fingerprint to pay</div><div class="ts">Confirm each purchase on the DigitalPersona 4500 after the card tap.</div></div>
               <label class="switch"><input type="checkbox" id="fpToggle"><span class="slider"></span></label>
@@ -410,8 +410,8 @@ const CONFIG = {
   N8N_BASE: "https://bernard100.app.n8n.cloud/webhook/cafeteria",
   RFID_SOURCE: "hid",            // "hid" = USB keyboard reader · "arduino" = Web Serial
   ARDUINO_BAUD: 115200,          // must match the Arduino sketch
-  BIO_BRIDGE: "http://localhost:9001",  // local DigitalPersona bridge service
-  REQUIRE_FP: false,             // require a fingerprint to confirm a purchase
+  BIO_BRIDGE: "http://localhost:9001",  // (fingerprint bridge — disabled for now)
+  REQUIRE_FP: false,             // fingerprint removed for now (DigitalPersona offline)
   ADMIN_PIN: "1234"             // gate for the Admin / reassign tool
 };
 // try to restore saved settings (works once hosted; ignored if storage blocked)
@@ -821,20 +821,7 @@ async function doPurchase(){
   const items=Object.values(cart).map(c=>({name:c.item.name,price:c.item.price,qty:c.qty}));
   $("#payBtn").disabled=true;
 
-  // optional fingerprint second factor
-  if(CONFIG.REQUIRE_FP){
-    const t=await api("bio-template",{rfid:posStudent.rfid});
-    if(t.ok && t.enrolled && t.template){
-      toast("Place finger on the scanner…");
-      const v=await bioVerifyCapture(t.template);
-      if(!v.ok || !v.match){
-        showResult(false,"Fingerprint not matched", v.reason||"Please try again");
-        refreshPay(); return;
-      }
-    }else{
-      toast("No fingerprint on file — charging by card only", true);
-    }
-  }
+  // Fingerprint second factor removed for now (DigitalPersona offline) — card-only.
 
   const r=await api("purchase",{
     rfid:posStudent.rfid,

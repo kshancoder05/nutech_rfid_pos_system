@@ -452,6 +452,7 @@ function signIn(){
     session={role:selectedRole,id,name:nm};
   }
   $("#login").classList.add("hidden"); $("#app").classList.remove("hidden");
+  if(!CONFIG.DEMO_MODE) Reader.autoReconnect();   // silently reconnect a granted Arduino port
   startApp();
 }
 $("#logout").addEventListener("click",()=>location.reload());
@@ -624,52 +625,6 @@ function renderRegister(){
   }));
 }
 function genUid(){ return Array.from({length:8},()=>"0123456789ABCDEF"[Math.floor(Math.random()*16)]).join(""); }
-
-/* ============================ SHARED RFID READER ============================
-   One reader, used by every card-tap point in the portal (currently Register).
-   - HID mode: a USB keyboard-style reader "types" the UID + Enter anywhere.
-   - Arduino mode: PN532/RC522 over Web Serial — SAME sketch & 115200 baud as POS/gate.
-   Whatever screen is waiting calls Reader.want(cb); the next tap fires that callback. */
-const Reader = (function(){
-  let serialPort=null, keepReading=false, connected=false, wantCb=null;
-  function deliver(uid){
-    uid=(uid||"").trim().toUpperCase();
-    if(uid.length<4) return;
-    if(wantCb){ const cb=wantCb; wantCb=null; cb(uid); }     // hand to whoever's waiting
-  }
-  function want(cb){ wantCb=cb; }                            // arm: next tap -> cb
-  function cancel(){ wantCb=null; }
-  async function connectArduino(){
-    if(!("serial" in navigator)) return {ok:false,reason:"Web Serial needs Chrome or Edge"};
-    try{
-      serialPort=await navigator.serial.requestPort();
-      await serialPort.open({baudRate:CONFIG.ARDUINO_BAUD});
-      keepReading=true; connected=true; readLoop();
-      return {ok:true};
-    }catch(e){ return {ok:false,reason:"Connection cancelled"}; }
-  }
-  async function readLoop(){
-    const dec=new TextDecoderStream();
-    const closed=serialPort.readable.pipeTo(dec.writable).catch(()=>{});
-    const reader=dec.readable.getReader(); let line="";
-    try{
-      while(keepReading){
-        const {value,done}=await reader.read(); if(done) break;
-        line+=value; let i;
-        while((i=line.search(/[\r\n]/))>=0){ deliver(line.slice(0,i)); line=line.slice(i+1); }
-      }
-    }catch(e){} finally{ reader.releaseLock(); await closed; }
-  }
-  // HID reader: types digits + Enter. Capture globally only while a field is waiting.
-  let hidBuf="";
-  document.addEventListener("keydown",e=>{
-    if(CONFIG.RFID_SOURCE!=="hid" || !wantCb) return;
-    if(e.key==="Enter"){ deliver(hidBuf); hidBuf=""; return; }
-    if(e.key.length===1) hidBuf+=e.key;
-  });
-  return { want, cancel, connectArduino, isConnected:()=>connected, mode:()=>CONFIG.RFID_SOURCE };
-})();
-
 function paintRegForm(){
   const el=$("#regForm"); if(!regRole){el.innerHTML="";return;}
   const idLabel = regRole==="Student"?"Student ID":regRole==="Personnel"?"Personnel ID":"Parent ID";
@@ -696,7 +651,7 @@ function paintRegForm(){
       <div style="margin-bottom:12px"><label>RFID card UID</label>
         <div style="display:flex;gap:8px"><input id="rgRfid" placeholder="tap card or type UID" style="flex:1">
         <button class="btn btn-ghost" id="rgTap" style="width:auto;white-space:nowrap;padding:0 16px">Tap</button></div></div>
-      <button class="btn btn-ghost" id="rgFp" style="width:100%;justify-content:space-between">Capture fingerprint <span id="rgFpS" style="color:var(--muted)">— optional —</span></button>
+      <button class="btn btn-ghost" id="rgFp" style="display:none;width:100%;justify-content:space-between">Capture fingerprint <span id="rgFpS" style="color:var(--muted)">— optional —</span></button>
       <button class="btn btn-ghost" id="rgFace" style="width:100%;justify-content:space-between;margin-top:8px">Capture face <span id="rgFaceS" style="color:var(--muted)">— optional —</span></button>
       <div style="margin-top:14px;margin-bottom:12px"><label>${regRole==="Personnel"?"Opening wallet (optional)":"Opening balance (₱)"}</label><input id="rgBalance" type="number" placeholder="0"></div>
       <button class="btn btn-primary" id="rgSubmit" style="width:100%">Register ${regRole}</button>
@@ -705,15 +660,8 @@ function paintRegForm(){
     </div></div>
   </div>`;
   $("#rgTap").addEventListener("click",()=>{
-    if(CONFIG.DEMO_MODE){ const uid=genUid(); $("#rgRfid").value=uid; toast("Card read · "+uid); return; }
-    // live: arm the shared reader; next tap (HID or Arduino) drops into the field
-    if(CONFIG.RFID_SOURCE==="arduino" && !Reader.isConnected()){
-      toast("Connect the Arduino reader in Settings first"); return;
-    }
-    $("#rgRfid").focus();
-    toast("Tap the card now…");
-    $("#rgTap").textContent="Waiting…";
-    Reader.want(uid=>{ $("#rgRfid").value=uid; $("#rgTap").textContent="Tap"; toast("Card read · "+uid); });
+    if(CONFIG.DEMO_MODE){ const uid=genUid(); $("#rgRfid").value=uid; toast("Card read · "+uid); }
+    else { $("#rgRfid").focus(); toast("Scan the card on the reader, or type its UID"); }
   });
   $("#rgFp").addEventListener("click",()=>{ regCaps.fingerprint="FP-"+Date.now(); $("#rgFpS").textContent="captured ✓"; toast("Fingerprint captured"); });
   $("#rgFace").addEventListener("click",()=>{ regCaps.face="FACE-"+Date.now(); $("#rgFaceS").textContent="captured ✓"; toast("Face captured"); });
