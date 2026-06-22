@@ -210,30 +210,31 @@ const CONFIG = {
 };
 try{ const s=JSON.parse(localStorage.getItem("schoolPortal")||"{}"); Object.assign(CONFIG,s); }catch(e){}
 function saveConfig(){ try{ localStorage.setItem("schoolPortal",JSON.stringify(CONFIG)); }catch(e){} }
-/* ================= BACKEND CONTRACT — linked to the cafeteria POS =================
-   Live mode POSTs {action,...} to the SAME /cafeteria webhook the POS uses.
-   liveApi() translates portal actions onto the POS's PROVEN actions:
 
-   REUSED (already working in your n8n — no new work):
-   • menu                  -> { ok, menu:[{name,price,cat|category,available?}] }   (normalized in-app)
-   • order  {id,items,total,payMode}   --sent as-->  purchase {accountId,studentId,items,total,payMode,by}
-                            expects { ok, balanceAfter | student.balance, txnId }
-   • credit-approve (Approved)         --also calls-->  topup {accountId,amount,by}
-   • client-data (fallback)            --uses-->  account-info {accountId,rfid}  -> { ok, account:{ownerName,balance,...} }
-
-   STILL NEEDS A SMALL n8n NODE (portal-specific reads/writes the POS never had):
-   • admin-overview        -> { ok, kpis:{people,salesToday,txns,present}, salesByDay:[{d,total}],
-                               recentTxns:[{ref,name,type,amount,time}], attendance:[{name,dept,in,out,status}], inventory:[] }
-   • client-data {role,id} -> { ok, profile, balance, receipts:[...], attendance:[...] }  (parent: children:[bundles])
-                              (without it the portal still shows card+balance via account-info)
-   • salary {id}           -> { ok, total, items:[{ref,items,amount,time}] }
-   • credit-request {requester,requesterId,targetName,targetId,amount,proof(base64)} -> { ok, entry }
-   • credit-requests {status} -> { ok, requests:[...] }
-   • credit-approve {entry,decision,by} -> { ok }   (money movement handled by topup above)
-
-   NEW Airtable table for the credit feature — CREDIT_REQUESTS:
-     Entry (primary), Requester, Requester ID, Target Account, Target Name, Amount (currency),
-     Proof (attachment), Status (Pending/Approved/Rejected), Requested (dateTime), Decided By, Note  */
+// ================= BACKEND CONTRACT - linked to the cafeteria POS =================
+// Live mode POSTs {action,...} to the SAME /cafeteria webhook the POS uses.
+// liveApi() translates portal actions onto the POS's PROVEN actions:
+//
+// REUSED (already working in your n8n - no new work):
+// - menu                  -> { ok, menu:[{name,price,cat|category,available?}] }   (normalized in-app)
+// - order  {id,items,total,payMode}   --sent as-->  purchase {accountId,studentId,items,total,payMode,by}
+//   expects { ok, balanceAfter | student.balance, txnId }
+// - credit-approve (Approved)         --also calls-->  topup {accountId,amount,by}
+// - client-data (fallback)            --uses-->  account-info {accountId,rfid}  -> { ok, account:{ownerName,balance,...} }
+//
+// STILL NEEDS A SMALL n8n NODE (portal-specific reads/writes the POS never had):
+// - admin-overview        -> { ok, kpis:{people,salesToday,txns,present}, salesByDay:[{d,total}],
+//                          recentTxns:[{ref,name,type,amount,time}], attendance:[{name,dept,in,out,status}], inventory:[] }
+// - client-data {role,id} -> { ok, profile, balance, receipts:[...], attendance:[...] }  (parent: children:[bundles])
+//   (without it the portal still shows card+balance via account-info)
+// - salary {id}           -> { ok, total, items:[{ref,items,amount,time}] }
+// - credit-request {requester,requesterId,targetName,targetId,amount,proof(base64)} -> { ok, entry }
+// - credit-requests {status} -> { ok, requests:[...] }
+// - credit-approve {entry,decision,by} -> { ok }   (money movement handled by topup above)
+//
+// NEW Airtable table for the credit feature - CREDIT_REQUESTS:
+//   Entry (primary), Requester, Requester ID, Target Account, Target Name, Amount (currency),
+//   Proof (attachment), Status (Pending/Approved/Rejected), Requested (dateTime), Decided By, Note
 
 /* ============================ DEMO DATA ============================ */
 const today = new Date().toLocaleDateString("en-CA");
