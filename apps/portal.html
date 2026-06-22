@@ -147,6 +147,11 @@
   .slider:before{content:"";position:absolute;height:22px;width:22px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
   .switch input:checked + .slider{background:#1a8f3c}
   .switch input:checked + .slider:before{transform:translateX(20px)}
+  .fld{margin-bottom:16px}
+  .fld label{display:block;font-weight:600;font-size:.85rem;margin-bottom:6px}
+  .fld select,.fld input{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:11px;background:#fff;box-sizing:border-box;font-family:inherit;font-size:.95rem}
+  .fld select:focus,.fld input:focus{border-color:var(--gold);outline:none}
+  .helper{font-size:.8rem;color:var(--muted);margin-top:8px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -200,6 +205,8 @@ const CONFIG = {
   DEMO_MODE: true,
   N8N_BASE: "https://bernard100.app.n8n.cloud/webhook/cafeteria",
   ADMIN_PIN: "1234",
+  RFID_SOURCE: "hid",            // "hid" = USB keyboard reader · "arduino" = Web Serial
+  ARDUINO_BAUD: 115200,          // must match the Arduino sketch (same as POS/gate)
 };
 try{ const s=JSON.parse(localStorage.getItem("schoolPortal")||"{}"); Object.assign(CONFIG,s); }catch(e){}
 function saveConfig(){ try{ localStorage.setItem("schoolPortal",JSON.stringify(CONFIG)); }catch(e){} }
@@ -489,6 +496,22 @@ function renderSettings(){
       <input id="hookUrl" value="${CONFIG.N8N_BASE}" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;font-family:var(--mono,monospace);font-size:.8rem;box-sizing:border-box">
       <button id="testHook" class="btn btn-ghost" style="margin-top:10px;width:auto">Test connection</button>
       <span id="testResult" style="margin-left:10px;font-size:.82rem"></span>
+
+      <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line)">
+        <div style="font-weight:700;font-size:.92rem;margin-bottom:8px">RFID reader</div>
+        <div class="fld">
+          <label for="rdrSrc">How cards are read</label>
+          <select id="rdrSrc">
+            <option value="hid"${CONFIG.RFID_SOURCE==="hid"?" selected":""}>USB HID reader (types UID like a keyboard)</option>
+            <option value="arduino"${CONFIG.RFID_SOURCE==="arduino"?" selected":""}>Arduino over USB (Web Serial)</option>
+          </select>
+        </div>
+        <div id="arduinoRow" style="display:${CONFIG.RFID_SOURCE==="arduino"?"block":"none"}">
+          <button class="btn btn-primary" id="rdrConnect" style="width:100%;margin-bottom:6px">Connect Arduino</button>
+          <span id="rdrResult" style="font-size:.82rem"></span>
+          <p class="helper">Chrome or Edge only. Click connect, pick the Arduino's serial port, then tap cards. Same PN532/RC522 sketch as the POS, 115200 baud.</p>
+        </div>
+      </div>
     </div>
 
     <div style="margin-top:20px;padding:12px;border-radius:10px;background:${d?"#eef1f7":"#e7f7ec"};font-size:.85rem">
@@ -518,6 +541,16 @@ function renderSettings(){
     saveConfig();
     toast(CONFIG.DEMO_MODE?"Saved · DEMO mode":"Saved · LIVE mode");
     startApp();
+  });
+  $("#rdrSrc")?.addEventListener("change",e=>{
+    CONFIG.RFID_SOURCE=e.target.value; saveConfig();
+    $("#arduinoRow").style.display=e.target.value==="arduino"?"block":"none";
+  });
+  $("#rdrConnect")?.addEventListener("click",async()=>{
+    const r=$("#rdrResult"); r.textContent="Pick the port…"; r.style.color="var(--muted)";
+    const res=await Reader.connectArduino();
+    if(res.ok){ r.textContent="✓ Reader connected"; r.style.color="#1a8f3c"; }
+    else{ r.textContent="✗ "+res.reason; r.style.color="#c0392b"; }
   });
 }
 
@@ -591,6 +624,52 @@ function renderRegister(){
   }));
 }
 function genUid(){ return Array.from({length:8},()=>"0123456789ABCDEF"[Math.floor(Math.random()*16)]).join(""); }
+
+/* ============================ SHARED RFID READER ============================
+   One reader, used by every card-tap point in the portal (currently Register).
+   - HID mode: a USB keyboard-style reader "types" the UID + Enter anywhere.
+   - Arduino mode: PN532/RC522 over Web Serial — SAME sketch & 115200 baud as POS/gate.
+   Whatever screen is waiting calls Reader.want(cb); the next tap fires that callback. */
+const Reader = (function(){
+  let serialPort=null, keepReading=false, connected=false, wantCb=null;
+  function deliver(uid){
+    uid=(uid||"").trim().toUpperCase();
+    if(uid.length<4) return;
+    if(wantCb){ const cb=wantCb; wantCb=null; cb(uid); }     // hand to whoever's waiting
+  }
+  function want(cb){ wantCb=cb; }                            // arm: next tap -> cb
+  function cancel(){ wantCb=null; }
+  async function connectArduino(){
+    if(!("serial" in navigator)) return {ok:false,reason:"Web Serial needs Chrome or Edge"};
+    try{
+      serialPort=await navigator.serial.requestPort();
+      await serialPort.open({baudRate:CONFIG.ARDUINO_BAUD});
+      keepReading=true; connected=true; readLoop();
+      return {ok:true};
+    }catch(e){ return {ok:false,reason:"Connection cancelled"}; }
+  }
+  async function readLoop(){
+    const dec=new TextDecoderStream();
+    const closed=serialPort.readable.pipeTo(dec.writable).catch(()=>{});
+    const reader=dec.readable.getReader(); let line="";
+    try{
+      while(keepReading){
+        const {value,done}=await reader.read(); if(done) break;
+        line+=value; let i;
+        while((i=line.search(/[\r\n]/))>=0){ deliver(line.slice(0,i)); line=line.slice(i+1); }
+      }
+    }catch(e){} finally{ reader.releaseLock(); await closed; }
+  }
+  // HID reader: types digits + Enter. Capture globally only while a field is waiting.
+  let hidBuf="";
+  document.addEventListener("keydown",e=>{
+    if(CONFIG.RFID_SOURCE!=="hid" || !wantCb) return;
+    if(e.key==="Enter"){ deliver(hidBuf); hidBuf=""; return; }
+    if(e.key.length===1) hidBuf+=e.key;
+  });
+  return { want, cancel, connectArduino, isConnected:()=>connected, mode:()=>CONFIG.RFID_SOURCE };
+})();
+
 function paintRegForm(){
   const el=$("#regForm"); if(!regRole){el.innerHTML="";return;}
   const idLabel = regRole==="Student"?"Student ID":regRole==="Personnel"?"Personnel ID":"Parent ID";
@@ -626,8 +705,15 @@ function paintRegForm(){
     </div></div>
   </div>`;
   $("#rgTap").addEventListener("click",()=>{
-    if(CONFIG.DEMO_MODE){ const uid=genUid(); $("#rgRfid").value=uid; toast("Card read · "+uid); }
-    else { $("#rgRfid").focus(); toast("Scan the card on the reader, or type its UID"); }
+    if(CONFIG.DEMO_MODE){ const uid=genUid(); $("#rgRfid").value=uid; toast("Card read · "+uid); return; }
+    // live: arm the shared reader; next tap (HID or Arduino) drops into the field
+    if(CONFIG.RFID_SOURCE==="arduino" && !Reader.isConnected()){
+      toast("Connect the Arduino reader in Settings first"); return;
+    }
+    $("#rgRfid").focus();
+    toast("Tap the card now…");
+    $("#rgTap").textContent="Waiting…";
+    Reader.want(uid=>{ $("#rgRfid").value=uid; $("#rgTap").textContent="Tap"; toast("Card read · "+uid); });
   });
   $("#rgFp").addEventListener("click",()=>{ regCaps.fingerprint="FP-"+Date.now(); $("#rgFpS").textContent="captured ✓"; toast("Fingerprint captured"); });
   $("#rgFace").addEventListener("click",()=>{ regCaps.face="FACE-"+Date.now(); $("#rgFaceS").textContent="captured ✓"; toast("Face captured"); });
