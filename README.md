@@ -9,7 +9,7 @@ serves both the cashless cafeteria and the entrance attendance gate.
   ────────────────       ──────────────        ────────────────
   portal.html  ┐
   gate.html    ├──HTTPS──►  n8n workflow  ──►   Airtable base
-  cafeteria-pos┘            (/cafeteria)        (apprpYxg7leO7JXKJ)
+  cafeteria-pos┘            (/cafeteria)        
 ```
 
 ## Folder map
