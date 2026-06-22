@@ -377,17 +377,29 @@ $("#camToggle").addEventListener("change",e=>{CONFIG.USE_CAMERA=e.target.checked
 $("#failToggle").addEventListener("change",e=>{CONFIG.FORCE_FAIL=e.target.checked;saveCfg();});
 $("#rfidSrc").addEventListener("change",e=>{CONFIG.RFID_SRC=e.target.value;saveCfg();syncReaderUI();});
 
-/* ---- Arduino over Web Serial (identical contract to the POS) ---- */
+/* ---- Arduino over Web Serial (identical contract to the POS, + auto-reconnect) ---- */
 let serialPort=null, serialKeepReading=false;
 async function connectArduino(){
   if(!("serial" in navigator)){ setHint("Web Serial needs Chrome or Edge"); return; }
   try{
-    serialPort = await navigator.serial.requestPort();
-    await serialPort.open({ baudRate: CONFIG.ARDUINO_BAUD });
-    serialKeepReading=true;
-    serialReadLoop();
+    serialPort = await navigator.serial.requestPort();   // first-time: user picks the port
+    await openAndRead();
     setHint("✓ Arduino connected — tap a card");
   }catch(e){ setHint("Arduino connection cancelled"); }
+}
+async function openAndRead(){
+  await serialPort.open({ baudRate: CONFIG.ARDUINO_BAUD });
+  serialKeepReading=true;
+  serialReadLoop();
+}
+/* On page load: silently reconnect to a port the user already granted, so the
+   gate "just works" without clicking Connect every time. */
+async function autoReconnectArduino(){
+  if(CONFIG.RFID_SRC!=="arduino" || !("serial" in navigator)) return;
+  try{
+    const ports = await navigator.serial.getPorts();   // previously-granted ports
+    if(ports.length){ serialPort = ports[0]; await openAndRead(); setHint("✓ Arduino reconnected — tap a card"); }
+  }catch(e){}
 }
 async function serialReadLoop(){
   const dec=new TextDecoderStream();
@@ -424,6 +436,7 @@ $("#deviceName").addEventListener("change",e=>{CONFIG.DEVICE=e.target.value.trim
 setInterval(()=>{$("#clock").textContent=now();},1000);
 $("#clock").textContent=now();
 syncUI(); showIdle();
+autoReconnectArduino();   // silently reconnect to a granted Arduino port
 </script>
 </body>
 </html>
