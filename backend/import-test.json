@@ -1,0 +1,126 @@
+{
+  "name": "IMPORT TEST — ping",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ping-test",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-ping",
+      "name": "Webhook (ping-test)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        300
+      ],
+      "webhookId": "ping-test-webhook"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/MENU",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "maxRecords",
+              "value": "3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "read-menu",
+      "name": "Read MENU (test)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -160,
+        300
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $('Read MENU (test)').first().json.records || [];\nreturn [{ json: {\n  ok: true,\n  message: \"Import + credential + webhook + Airtable all working\",\n  menuCount: rows.length,\n  sample: rows.map(r => r.fields[\"Item Name\"]).filter(Boolean)\n} }];"
+      },
+      "id": "shape-ping",
+      "name": "Shape result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {}
+      },
+      "id": "respond-ping",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook (ping-test)": {
+      "main": [
+        [
+          {
+            "node": "Read MENU (test)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read MENU (test)": {
+      "main": [
+        [
+          {
+            "node": "Shape result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shape result": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

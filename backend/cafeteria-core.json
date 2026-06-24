@@ -1,0 +1,815 @@
+{
+  "name": "Cafeteria POS — Nutech RFID (CORE rebuild)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cafeteria",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-id",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -600,
+        400
+      ],
+      "webhookId": "cafeteria-webhook"
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "outputKey": "verify",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "rule-verify",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "verify",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputName": "verify"
+            },
+            {
+              "outputKey": "register-person",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "rule-register-person",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "register-person",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputName": "register-person"
+            },
+            {
+              "outputKey": "gate-verify",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "rule-gate-verify",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "gate-verify",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputName": "gate-verify"
+            },
+            {
+              "outputKey": "gate-punch",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "rule-gate-punch",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "gate-punch",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputName": "gate-punch"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "route-by-action-id",
+      "name": "Route by action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -380,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok:false, reason:\"unrouted action\", got: $json.body.action }) }}"
+      },
+      "id": "respond-fallback-id",
+      "name": "Respond fallback",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -120,
+        980
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/ACCOUNT",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filterByFormula",
+              "value": "={{ \"{RFID UID}='\" + $('Webhook').first().json.body.rfid + \"'\" }}"
+            },
+            {
+              "name": "maxRecords",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "find-account--verify--id",
+      "name": "Find account (verify)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -120,
+        0
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const recs = $('Find account (verify)').first().json.records || [];\nif(!recs.length) return [{ json:{ ok:false, reason:\"Card not recognized\" } }];\nconst a = recs[0].fields;\nreturn [{ json:{\n  ok:true,\n  accountId: a.AccountID, rfid: a[\"RFID UID\"],\n  ownerName: a[\"Owner Name\"], ownerType: a[\"Owner Type\"],\n  balance: a.Balance || 0, status: a.Status\n} }];"
+      },
+      "id": "combine-verify-id",
+      "name": "Combine verify",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "respondWith": "firstIncomingItem"
+      },
+      "id": "respond-verify-id",
+      "name": "Respond verify",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        360,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('Webhook').first().json.body;\nconst accountId = \"ACC-\" + Date.now().toString(36).toUpperCase();\nconst table = b.ownerType === \"Student\" ? \"STUDENT\" : b.ownerType === \"Personnel\" ? \"PERSONNEL\" : \"PARENT\";\nconst linkField = b.ownerType === \"Student\" ? \"STUDENT_ID\" : b.ownerType === \"Personnel\" ? \"PERSONNEL_ID\" : \"PARENT_ID\";\nconst accountFields = {\n  \"AccountID\": accountId,\n  \"Owner Name\": b.ownerName,\n  \"Owner Type\": b.ownerType,\n  \"RFID UID\": b.rfid,\n  \"FACE_BIO_ID\": b.face,\n  \"Balance\": b.initialBalance || 0,\n  \"Status\": \"Active\",\n  [linkField]: b.roleId\n};\nlet roleFields;\nif (table === \"STUDENT\") roleFields = {\n  \"StudentID\": b.roleId, \"StudentName\": b.ownerName, \"Section\": b.section || \"\",\n  \"Contact No.\": b.contact || \"\", \"Email\": b.email || \"\", \"Home Address\": b.address || \"\",\n  \"Sex\": b.sex || \"Female\", \"IsEnrolled\": b.isEnrolled || \"Yes\",\n  \"PARENT_ID\": b.parentId || \"\", \"Status\": \"Active\"\n};\nelse if (table === \"PERSONNEL\") roleFields = {\n  \"Personnel_ID\": b.roleId, \"Personnel_Name\": b.ownerName, \"Contact_No.\": b.contact || \"\",\n  \"Email\": b.email || \"\", \"Home_Address\": b.address || \"\", \"P_Role\": b.pRole || \"Teacher\",\n  \"Salary\": b.salary || 0\n};\nelse roleFields = {\n  \"ParentID\": b.roleId, \"ParentName\": b.ownerName, \"Contact Number\": b.contact || \"\",\n  \"Email\": b.email || \"\", \"Home Address\": b.address || \"\"\n};\nreturn [{ json: { accountId, table, roleFields, accountFields } }];"
+      },
+      "id": "build-register-id",
+      "name": "Build register",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -120,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ \"https://api.airtable.com/v0/apprpYxg7leO7JXKJ/\" + $json.table }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: $json.roleFields, typecast: true }) }}",
+        "options": {}
+      },
+      "id": "create-role-row-id",
+      "name": "Create role row",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        120,
+        260
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/ACCOUNT",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: $('Build register').first().json.accountFields, typecast: true }) }}",
+        "options": {}
+      },
+      "id": "create-account-id",
+      "name": "Create account",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        360,
+        260
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: {\n  ok:true,\n  accountId: $('Build register').first().json.accountId,\n  roleId: $('Webhook').first().json.body.roleId\n} }];"
+      },
+      "id": "shape-register-id",
+      "name": "Shape register",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "respondWith": "firstIncomingItem"
+      },
+      "id": "respond-register-id",
+      "name": "Respond register",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        840,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/ACCOUNT",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filterByFormula",
+              "value": "={{ \"{RFID UID}='\" + $('Webhook').first().json.body.rfid + \"'\" }}"
+            },
+            {
+              "name": "maxRecords",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "find-account--gate--id",
+      "name": "Find account (gate)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -120,
+        520
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/DTR",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filterByFormula",
+              "value": "={{ \"AND({Account ID}='\" + ($('Find account (gate)').first().json.records[0] ? $('Find account (gate)').first().json.records[0].fields.AccountID : \"\") + \"',{Date}='\" + $now.format('yyyy-MM-dd') + \"')\" }}"
+            },
+            {
+              "name": "maxRecords",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "find-dtr-today-id",
+      "name": "Find DTR today",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        120,
+        520
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const recs = $('Find account (gate)').first().json.records || [];\nif(!recs.length) return [{ json:{ ok:false, reason:\"Card not recognized\" } }];\nconst a = recs[0].fields;\nconst dtr = ($('Find DTR today').first().json.records || [])[0];\nreturn [{ json:{ ok:true, account:{\n  accountId: a.AccountID, ownerName: a[\"Owner Name\"], ownerType: a[\"Owner Type\"],\n  status: a.Status, face: a.FACE_BIO_ID || \"\",\n  today: dtr ? { hasIn: !!dtr.fields[\"Time In\"], hasOut: !!dtr.fields[\"Time Out\"], recordId: dtr.id } : null\n} } }];"
+      },
+      "id": "build-gate-verify-id",
+      "name": "Build gate verify",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        360,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "respondWith": "firstIncomingItem"
+      },
+      "id": "respond-gate-verify-id",
+      "name": "Respond gate-verify",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        600,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/DTR",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filterByFormula",
+              "value": "={{ \"AND({Account ID}='\" + $('Webhook').first().json.body.accountId + \"',{Date}='\" + $now.format('yyyy-MM-dd') + \"')\" }}"
+            },
+            {
+              "name": "maxRecords",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "find-dtr--punch--id",
+      "name": "Find DTR (punch)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -120,
+        820
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('Webhook').first().json.body;\nconst dtr = ($('Find DTR (punch)').first().json.records || [])[0];\nconst col = b.field === \"timeOut\" ? \"Time Out\" : \"Time In\";\nreturn [{ json: {\n  exists: !!dtr, recordId: dtr ? dtr.id : null, col, time: b.time, status: b.status,\n  createFields: { \"Account ID\": b.accountId, \"Name\": b.ownerName, \"Department\": b.ownerType,\n    \"Date\": $now.format('yyyy-MM-dd'), [col]: b.time, \"Status\": b.status, \"Device\": b.device }\n} }];"
+      },
+      "id": "build-punch-id",
+      "name": "Build punch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        820
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "DTR exists?-c1",
+              "leftValue": "={{ $json.exists }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "dtr-exists--id",
+      "name": "DTR exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        360,
+        820
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ \"https://api.airtable.com/v0/apprpYxg7leO7JXKJ/DTR/\" + $('Build punch').first().json.recordId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: { [$('Build punch').first().json.col]: $('Build punch').first().json.time, \"Status\": $('Build punch').first().json.status } }) }}",
+        "options": {}
+      },
+      "id": "update-dtr-id",
+      "name": "Update DTR",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        600,
+        720
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/DTR",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: $('Build punch').first().json.createFields, typecast: true }) }}",
+        "options": {}
+      },
+      "id": "create-dtr-id",
+      "name": "Create DTR",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        600,
+        920
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/ATTENDANCE",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: {\n    \"AccountID\": $('Webhook').first().json.body.accountId,\n    \"Direction\": $('Webhook').first().json.body.direction,\n    \"Method\": \"Card+Face\",\n    \"Device\": $('Webhook').first().json.body.device,\n    \"Timestamp\": $now.toISO()\n  }, typecast: true }) }}",
+        "options": {}
+      },
+      "id": "create-attendance-id",
+      "name": "Create ATTENDANCE",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        860,
+        820
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {},
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok:true }) }}"
+      },
+      "id": "respond-gate-punch-id",
+      "name": "Respond gate-punch",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        820
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Route by action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by action": {
+      "main": [
+        [
+          {
+            "node": "Find account (verify)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build register",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find account (gate)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find DTR (punch)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find account (verify)": {
+      "main": [
+        [
+          {
+            "node": "Combine verify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine verify": {
+      "main": [
+        [
+          {
+            "node": "Respond verify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build register": {
+      "main": [
+        [
+          {
+            "node": "Create role row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create role row": {
+      "main": [
+        [
+          {
+            "node": "Create account",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create account": {
+      "main": [
+        [
+          {
+            "node": "Shape register",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shape register": {
+      "main": [
+        [
+          {
+            "node": "Respond register",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find account (gate)": {
+      "main": [
+        [
+          {
+            "node": "Find DTR today",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find DTR today": {
+      "main": [
+        [
+          {
+            "node": "Build gate verify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build gate verify": {
+      "main": [
+        [
+          {
+            "node": "Respond gate-verify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find DTR (punch)": {
+      "main": [
+        [
+          {
+            "node": "Build punch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build punch": {
+      "main": [
+        [
+          {
+            "node": "DTR exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DTR exists?": {
+      "main": [
+        [
+          {
+            "node": "Update DTR",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create DTR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update DTR": {
+      "main": [
+        [
+          {
+            "node": "Create ATTENDANCE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create DTR": {
+      "main": [
+        [
+          {
+            "node": "Create ATTENDANCE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create ATTENDANCE": {
+      "main": [
+        [
+          {
+            "node": "Respond gate-punch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

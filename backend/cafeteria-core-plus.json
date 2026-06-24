@@ -1,0 +1,1971 @@
+{
+  "name": "Cafeteria POS — Nutech RFID (CORE + Cafeteria)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cafeteria",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-id",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -600,
+        400
+      ],
+      "webhookId": "cafeteria-webhook"
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "outputKey": "verify",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "rule-verify",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "verify",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputName": "verify"
+            },
+            {
+              "outputKey": "register-person",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "rule-register-person",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "register-person",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputName": "register-person"
+            },
+            {
+              "outputKey": "gate-verify",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "rule-gate-verify",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "gate-verify",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputName": "gate-verify"
+            },
+            {
+              "outputKey": "gate-punch",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "rule-gate-punch",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "gate-punch",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputName": "gate-punch"
+            },
+            {
+              "outputKey": "menu",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "rule-menu",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "menu",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputName": "menu"
+            },
+            {
+              "outputKey": "account-info",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "rule-account-info",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "account-info",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputName": "account-info"
+            },
+            {
+              "outputKey": "topup",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "rule-topup",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "topup",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputName": "topup"
+            },
+            {
+              "outputKey": "purchase",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "rule-purchase",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "purchase",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputName": "purchase"
+            },
+            {
+              "outputKey": "enroll",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "rule-enroll",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "enroll",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputName": "enroll"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "route-by-action-id",
+      "name": "Route by action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -380,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok:false, reason:\"unrouted action\", got: $json.body.action }) }}"
+      },
+      "id": "respond-fallback-id",
+      "name": "Respond fallback",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -120,
+        980
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/ACCOUNT",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filterByFormula",
+              "value": "={{ \"{RFID UID}='\" + $('Webhook').first().json.body.rfid + \"'\" }}"
+            },
+            {
+              "name": "maxRecords",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "find-account--verify--id",
+      "name": "Find account (verify)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -120,
+        0
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const recs = $('Find account (verify)').first().json.records || [];\nif(!recs.length) return [{ json:{ ok:false, reason:\"Card not recognized\" } }];\nconst a = recs[0].fields;\nreturn [{ json:{\n  ok:true,\n  accountId: a.AccountID, rfid: a[\"RFID UID\"],\n  ownerName: a[\"Owner Name\"], ownerType: a[\"Owner Type\"],\n  balance: a.Balance || 0, status: a.Status\n} }];"
+      },
+      "id": "combine-verify-id",
+      "name": "Combine verify",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "respondWith": "firstIncomingItem"
+      },
+      "id": "respond-verify-id",
+      "name": "Respond verify",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        360,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('Webhook').first().json.body;\nconst accountId = \"ACC-\" + Date.now().toString(36).toUpperCase();\nconst table = b.ownerType === \"Student\" ? \"STUDENT\" : b.ownerType === \"Personnel\" ? \"PERSONNEL\" : \"PARENT\";\nconst linkField = b.ownerType === \"Student\" ? \"STUDENT_ID\" : b.ownerType === \"Personnel\" ? \"PERSONNEL_ID\" : \"PARENT_ID\";\nconst accountFields = {\n  \"AccountID\": accountId,\n  \"Owner Name\": b.ownerName,\n  \"Owner Type\": b.ownerType,\n  \"RFID UID\": b.rfid,\n  \"FACE_BIO_ID\": b.face,\n  \"Balance\": b.initialBalance || 0,\n  \"Status\": \"Active\",\n  [linkField]: b.roleId\n};\nlet roleFields;\nif (table === \"STUDENT\") roleFields = {\n  \"StudentID\": b.roleId, \"StudentName\": b.ownerName, \"Section\": b.section || \"\",\n  \"Contact No.\": b.contact || \"\", \"Email\": b.email || \"\", \"Home Address\": b.address || \"\",\n  \"Sex\": b.sex || \"Female\", \"IsEnrolled\": b.isEnrolled || \"Yes\",\n  \"PARENT_ID\": b.parentId || \"\", \"Status\": \"Active\"\n};\nelse if (table === \"PERSONNEL\") roleFields = {\n  \"Personnel_ID\": b.roleId, \"Personnel_Name\": b.ownerName, \"Contact_No.\": b.contact || \"\",\n  \"Email\": b.email || \"\", \"Home_Address\": b.address || \"\", \"P_Role\": b.pRole || \"Teacher\",\n  \"Salary\": b.salary || 0\n};\nelse roleFields = {\n  \"ParentID\": b.roleId, \"ParentName\": b.ownerName, \"Contact Number\": b.contact || \"\",\n  \"Email\": b.email || \"\", \"Home Address\": b.address || \"\"\n};\nreturn [{ json: { accountId, table, roleFields, accountFields } }];"
+      },
+      "id": "build-register-id",
+      "name": "Build register",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -120,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ \"https://api.airtable.com/v0/apprpYxg7leO7JXKJ/\" + $json.table }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: $json.roleFields, typecast: true }) }}",
+        "options": {}
+      },
+      "id": "create-role-row-id",
+      "name": "Create role row",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        120,
+        260
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/ACCOUNT",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: $('Build register').first().json.accountFields, typecast: true }) }}",
+        "options": {}
+      },
+      "id": "create-account-id",
+      "name": "Create account",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        360,
+        260
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: {\n  ok:true,\n  accountId: $('Build register').first().json.accountId,\n  roleId: $('Webhook').first().json.body.roleId\n} }];"
+      },
+      "id": "shape-register-id",
+      "name": "Shape register",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "respondWith": "firstIncomingItem"
+      },
+      "id": "respond-register-id",
+      "name": "Respond register",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        840,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/ACCOUNT",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filterByFormula",
+              "value": "={{ \"{RFID UID}='\" + $('Webhook').first().json.body.rfid + \"'\" }}"
+            },
+            {
+              "name": "maxRecords",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "find-account--gate--id",
+      "name": "Find account (gate)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -120,
+        520
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/DTR",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filterByFormula",
+              "value": "={{ \"AND({Account ID}='\" + ($('Find account (gate)').first().json.records[0] ? $('Find account (gate)').first().json.records[0].fields.AccountID : \"\") + \"',{Date}='\" + $now.format('yyyy-MM-dd') + \"')\" }}"
+            },
+            {
+              "name": "maxRecords",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "find-dtr-today-id",
+      "name": "Find DTR today",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        120,
+        520
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const recs = $('Find account (gate)').first().json.records || [];\nif(!recs.length) return [{ json:{ ok:false, reason:\"Card not recognized\" } }];\nconst a = recs[0].fields;\nconst dtr = ($('Find DTR today').first().json.records || [])[0];\nreturn [{ json:{ ok:true, account:{\n  accountId: a.AccountID, ownerName: a[\"Owner Name\"], ownerType: a[\"Owner Type\"],\n  status: a.Status, face: a.FACE_BIO_ID || \"\",\n  today: dtr ? { hasIn: !!dtr.fields[\"Time In\"], hasOut: !!dtr.fields[\"Time Out\"], recordId: dtr.id } : null\n} } }];"
+      },
+      "id": "build-gate-verify-id",
+      "name": "Build gate verify",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        360,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "respondWith": "firstIncomingItem"
+      },
+      "id": "respond-gate-verify-id",
+      "name": "Respond gate-verify",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        600,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/DTR",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filterByFormula",
+              "value": "={{ \"AND({Account ID}='\" + $('Webhook').first().json.body.accountId + \"',{Date}='\" + $now.format('yyyy-MM-dd') + \"')\" }}"
+            },
+            {
+              "name": "maxRecords",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "find-dtr--punch--id",
+      "name": "Find DTR (punch)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -120,
+        820
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('Webhook').first().json.body;\nconst dtr = ($('Find DTR (punch)').first().json.records || [])[0];\nconst col = b.field === \"timeOut\" ? \"Time Out\" : \"Time In\";\nreturn [{ json: {\n  exists: !!dtr, recordId: dtr ? dtr.id : null, col, time: b.time, status: b.status,\n  createFields: { \"Account ID\": b.accountId, \"Name\": b.ownerName, \"Department\": b.ownerType,\n    \"Date\": $now.format('yyyy-MM-dd'), [col]: b.time, \"Status\": b.status, \"Device\": b.device }\n} }];"
+      },
+      "id": "build-punch-id",
+      "name": "Build punch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        820
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "DTR exists?-c1",
+              "leftValue": "={{ $json.exists }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "dtr-exists--id",
+      "name": "DTR exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        360,
+        820
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ \"https://api.airtable.com/v0/apprpYxg7leO7JXKJ/DTR/\" + $('Build punch').first().json.recordId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: { [$('Build punch').first().json.col]: $('Build punch').first().json.time, \"Status\": $('Build punch').first().json.status } }) }}",
+        "options": {}
+      },
+      "id": "update-dtr-id",
+      "name": "Update DTR",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        600,
+        720
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/DTR",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: $('Build punch').first().json.createFields, typecast: true }) }}",
+        "options": {}
+      },
+      "id": "create-dtr-id",
+      "name": "Create DTR",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        600,
+        920
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/ATTENDANCE",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: {\n    \"AccountID\": $('Webhook').first().json.body.accountId,\n    \"Direction\": $('Webhook').first().json.body.direction,\n    \"Method\": \"Card+Face\",\n    \"Device\": $('Webhook').first().json.body.device,\n    \"Timestamp\": $now.toISO()\n  }, typecast: true }) }}",
+        "options": {}
+      },
+      "id": "create-attendance-id",
+      "name": "Create ATTENDANCE",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        860,
+        820
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {},
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok:true }) }}"
+      },
+      "id": "respond-gate-punch-id",
+      "name": "Respond gate-punch",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        820
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/MENU",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "options": {}
+      },
+      "id": "list-menu-id",
+      "name": "List menu",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -120,
+        1120
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $('List menu').first().json.records || [];\nreturn [{ json: { ok:true, menu: rows.map(r => ({\n  name: r.fields[\"Item Name\"],\n  price: r.fields.Price || 0,\n  category: (r.fields.Category && r.fields.Category.name) ? r.fields.Category.name : (r.fields.Category || \"\"),\n  available: r.fields.Available === true,\n  stock: r.fields[\"Stock On Hand\"],\n  stockStatus: r.fields[\"Stock Status\"]\n})) } }];"
+      },
+      "id": "map-menu-id",
+      "name": "Map menu",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "respondWith": "firstIncomingItem"
+      },
+      "id": "respond-menu-id",
+      "name": "Respond menu",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        360,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/ACCOUNT",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filterByFormula",
+              "value": "={{ $('Webhook').first().json.body.accountId ? \"{AccountID}='\" + $('Webhook').first().json.body.accountId + \"'\" : \"{RFID UID}='\" + $('Webhook').first().json.body.rfid + \"'\" }}"
+            },
+            {
+              "name": "maxRecords",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "find-account--info--id",
+      "name": "Find account (info)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -120,
+        1320
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const r = ($('Find account (info)').first().json.records || [])[0];\nif(!r) return [{ json:{ ok:false, reason:\"Account not found\" } }];\nconst a = r.fields;\nreturn [{ json:{ ok:true, account:{\n  accountId: a.AccountID, ownerName: a[\"Owner Name\"], ownerType: a[\"Owner Type\"],\n  balance: a.Balance || 0, status: a.Status, rfid: a[\"RFID UID\"]\n} } }];"
+      },
+      "id": "build-account-info-id",
+      "name": "Build account-info",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        1320
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "respondWith": "firstIncomingItem"
+      },
+      "id": "respond-account-info-id",
+      "name": "Respond account-info",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        360,
+        1320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/ACCOUNT",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filterByFormula",
+              "value": "={{ \"{AccountID}='\" + $('Webhook').first().json.body.accountId + \"'\" }}"
+            },
+            {
+              "name": "maxRecords",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "find-account--topup--id",
+      "name": "Find account (topup)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -120,
+        1520
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('Webhook').first().json.body;\nconst r = ($('Find account (topup)').first().json.records || [])[0];\nif(!r) return [{ json:{ ok:false, reason:\"Account not found\" } }];\nreturn [{ json:{ ok:true, recordId:r.id,\n  newBalance:(r.fields.Balance || 0) + Number(b.amount),\n  amount:Number(b.amount), accountId:b.accountId, by:b.by || \"POS\" } }];"
+      },
+      "id": "validate-topup-id",
+      "name": "Validate topup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        1520
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "Topup OK?-c1",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "topup-ok--id",
+      "name": "Topup OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        360,
+        1520
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ \"https://api.airtable.com/v0/apprpYxg7leO7JXKJ/ACCOUNT/\" + $('Validate topup').first().json.recordId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: { \"Balance\": $('Validate topup').first().json.newBalance } }) }}",
+        "options": {}
+      },
+      "id": "add-to-balance-id",
+      "name": "Add to balance",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        600,
+        1460
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/TRANSACTIONS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: {\n    \"TxnRef\": \"LD-\" + $now.toMillis(),\n    \"Type\": \"Top-up\",\n    \"AccountID\": $('Validate topup').first().json.accountId,\n    \"Amount\": $('Validate topup').first().json.amount,\n    \"Balance After\": $('Validate topup').first().json.newBalance,\n    \"By\": $('Validate topup').first().json.by\n  }, typecast: true }) }}",
+        "options": {}
+      },
+      "id": "log-topup-id",
+      "name": "Log topup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        1460
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {},
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok:true, balanceAfter: $('Validate topup').first().json.newBalance }) }}"
+      },
+      "id": "respond-topup-id",
+      "name": "Respond topup",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1080,
+        1460
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok:false, reason: $('Validate topup').first().json.reason }) }}"
+      },
+      "id": "respond-topup-declined-id",
+      "name": "Respond topup declined",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        600,
+        1620
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/ACCOUNT",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filterByFormula",
+              "value": "={{ \"{AccountID}='\" + $('Webhook').first().json.body.accountId + \"'\" }}"
+            },
+            {
+              "name": "maxRecords",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "find-account--purchase--id",
+      "name": "Find account (purchase)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -120,
+        1820
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('Webhook').first().json.body;\nconst recs = $('Find account (purchase)').first().json.records || [];\nif(!recs.length) return [{ json:{ ok:false, reason:\"Account not found\" } }];\nconst rec = recs[0]; const bal = rec.fields.Balance || 0;\nconst isWallet = b.payMode !== \"salary\";\nconst ok = !isWallet || bal >= b.total;\nreturn [{ json:{\n  ok, reason: ok ? \"\" : \"Not enough balance\",\n  recordId: rec.id, newBalance: isWallet ? bal - b.total : bal,\n  total: b.total, items: b.items || [], by: b.by || \"POS\", accountId: b.accountId\n} }];"
+      },
+      "id": "validate-purchase-id",
+      "name": "Validate purchase",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        1820
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "Purchase OK?-c1",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "purchase-ok--id",
+      "name": "Purchase OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        360,
+        1820
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ \"https://api.airtable.com/v0/apprpYxg7leO7JXKJ/ACCOUNT/\" + $('Validate purchase').first().json.recordId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: { \"Balance\": $('Validate purchase').first().json.newBalance } }) }}",
+        "options": {}
+      },
+      "id": "deduct-balance-id",
+      "name": "Deduct balance",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        600,
+        1740
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/TRANSACTIONS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: {\n    \"TxnRef\": \"OR-\" + $now.toMillis(),\n    \"Type\": \"Sale\",\n    \"AccountID\": $('Validate purchase').first().json.accountId,\n    \"Amount\": $('Validate purchase').first().json.total,\n    \"Balance After\": $('Validate purchase').first().json.newBalance,\n    \"Items\": ($('Validate purchase').first().json.items || []).map(i => i.name + (i.qty>1 ? \" x\"+i.qty : \"\")).join(\", \"),\n    \"By\": $('Validate purchase').first().json.by\n  }, typecast: true }) }}",
+        "options": {}
+      },
+      "id": "log-purchase-id",
+      "name": "Log purchase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        1740
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const v = $('Validate purchase').first().json;\nconst txnRef = ($('Log purchase').first().json.fields && $('Log purchase').first().json.fields.TxnRef) ? $('Log purchase').first().json.fields.TxnRef : (\"OR-\" + Date.now());\nconst out = (v.items || []).map(i => ({ json:{\n  txnRef, item:i.name, category:i.category || \"\", qty:i.qty || 1, price:i.price || 0,\n  cashier:v.by, accountId:v.accountId\n} }));\nreturn out.length ? out : [{ json:{ txnRef, item:null } }];"
+      },
+      "id": "split-cart-id",
+      "name": "Split Cart",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        1740
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/SALE_ITEMS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: {\n    \"Line Ref\": \"LI-\" + $now.toMillis() + \"-\" + $itemIndex,\n    \"TxnRef\": $json.txnRef,\n    \"Item Name\": $json.item,\n    \"Category\": $json.category,\n    \"Qty\": $json.qty,\n    \"Unit Price\": $json.price,\n    \"Cashier\": $json.cashier,\n    \"Account ID\": $json.accountId\n  }, typecast: true }) }}",
+        "options": {}
+      },
+      "id": "create-sale-items-id",
+      "name": "Create SALE_ITEMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        1740
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/MENU",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filterByFormula",
+              "value": "={{ \"{Item Name}='\" + $json.item + \"'\" }}"
+            },
+            {
+              "name": "maxRecords",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "find-menu-item-id",
+      "name": "Find MENU item",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1560,
+        1740
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// runs once per cart item; use THIS item's menu lookup + THIS item's qty\nconst recs = $('Find MENU item').first().json.records || [];\nconst m = recs[0];\nconst qty = $json.qty || 1;\nif(!m || !m.id){ return [{ json:{ skip:true, recordId:\"\" } }]; }\nconst onHand = (m.fields && m.fields[\"Stock On Hand\"]) || 0;\nreturn [{ json:{ skip:false, recordId:m.id, newStock: Math.max(0, onHand - qty) } }];"
+      },
+      "id": "compute-new-stock-id",
+      "name": "Compute new stock",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1800,
+        1740
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ \"https://api.airtable.com/v0/apprpYxg7leO7JXKJ/MENU/\" + $json.recordId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: { \"Stock On Hand\": $json.newStock } }) }}",
+        "options": {}
+      },
+      "id": "update-menu-stock-id",
+      "name": "Update MENU stock",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2280,
+        1680
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {},
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok:true, txnId: ($('Log purchase').first().json.fields ? $('Log purchase').first().json.fields.TxnRef : \"OK\"), balanceAfter: $('Validate purchase').first().json.newBalance }) }}"
+      },
+      "id": "respond-purchase-id",
+      "name": "Respond purchase",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2280,
+        1740
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok:false, reason: $('Validate purchase').first().json.reason }) }}"
+      },
+      "id": "respond-purchase-declined-id",
+      "name": "Respond purchase declined",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        600,
+        1920
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "Has stock row?-c1",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": "false",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "has-stock-row--id",
+      "name": "Has stock row?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2280,
+        1860
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.airtable.com/v0/apprpYxg7leO7JXKJ/ACCOUNT",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filterByFormula",
+              "value": "={{ \"{AccountID}='\" + $('Webhook').first().json.body.accountId + \"'\" }}"
+            },
+            {
+              "name": "maxRecords",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "find-account--enroll--id",
+      "name": "Find account (enroll)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -120,
+        2220
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('Webhook').first().json.body;\nconst r = ($('Find account (enroll)').first().json.records || [])[0];\nif(!r) return [{ json:{ ok:false, reason:\"Account not found\" } }];\nif(!b.rfid) return [{ json:{ ok:false, reason:\"No card UID\" } }];\nreturn [{ json:{ ok:true, recordId:r.id, rfid:b.rfid, accountId:b.accountId } }];"
+      },
+      "id": "validate-enroll-id",
+      "name": "Validate enroll",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        2220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "Enroll OK?-c1",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "enroll-ok--id",
+      "name": "Enroll OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        360,
+        2220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ \"https://api.airtable.com/v0/apprpYxg7leO7JXKJ/ACCOUNT/\" + $('Validate enroll').first().json.recordId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: { \"RFID UID\": $('Validate enroll').first().json.rfid } }) }}",
+        "options": {}
+      },
+      "id": "write-rfid-to-account-id",
+      "name": "Write RFID to account",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        600,
+        2160
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_CRED_ID",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {},
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok:true, accountId: $('Validate enroll').first().json.accountId, rfid: $('Validate enroll').first().json.rfid }) }}"
+      },
+      "id": "respond-enroll-id",
+      "name": "Respond enroll",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        840,
+        2160
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok:false, reason: $('Validate enroll').first().json.reason }) }}"
+      },
+      "id": "respond-enroll-declined-id",
+      "name": "Respond enroll declined",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        600,
+        2320
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Route by action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by action": {
+      "main": [
+        [
+          {
+            "node": "Find account (verify)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build register",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find account (gate)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find DTR (punch)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "List menu",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find account (info)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find account (topup)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find account (purchase)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find account (enroll)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find account (verify)": {
+      "main": [
+        [
+          {
+            "node": "Combine verify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine verify": {
+      "main": [
+        [
+          {
+            "node": "Respond verify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build register": {
+      "main": [
+        [
+          {
+            "node": "Create role row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create role row": {
+      "main": [
+        [
+          {
+            "node": "Create account",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create account": {
+      "main": [
+        [
+          {
+            "node": "Shape register",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shape register": {
+      "main": [
+        [
+          {
+            "node": "Respond register",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find account (gate)": {
+      "main": [
+        [
+          {
+            "node": "Find DTR today",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find DTR today": {
+      "main": [
+        [
+          {
+            "node": "Build gate verify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build gate verify": {
+      "main": [
+        [
+          {
+            "node": "Respond gate-verify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find DTR (punch)": {
+      "main": [
+        [
+          {
+            "node": "Build punch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build punch": {
+      "main": [
+        [
+          {
+            "node": "DTR exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DTR exists?": {
+      "main": [
+        [
+          {
+            "node": "Update DTR",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create DTR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update DTR": {
+      "main": [
+        [
+          {
+            "node": "Create ATTENDANCE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create DTR": {
+      "main": [
+        [
+          {
+            "node": "Create ATTENDANCE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create ATTENDANCE": {
+      "main": [
+        [
+          {
+            "node": "Respond gate-punch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List menu": {
+      "main": [
+        [
+          {
+            "node": "Map menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map menu": {
+      "main": [
+        [
+          {
+            "node": "Respond menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find account (info)": {
+      "main": [
+        [
+          {
+            "node": "Build account-info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build account-info": {
+      "main": [
+        [
+          {
+            "node": "Respond account-info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find account (topup)": {
+      "main": [
+        [
+          {
+            "node": "Validate topup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate topup": {
+      "main": [
+        [
+          {
+            "node": "Topup OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Topup OK?": {
+      "main": [
+        [
+          {
+            "node": "Add to balance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond topup declined",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add to balance": {
+      "main": [
+        [
+          {
+            "node": "Log topup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log topup": {
+      "main": [
+        [
+          {
+            "node": "Respond topup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find account (purchase)": {
+      "main": [
+        [
+          {
+            "node": "Validate purchase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate purchase": {
+      "main": [
+        [
+          {
+            "node": "Purchase OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Purchase OK?": {
+      "main": [
+        [
+          {
+            "node": "Deduct balance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond purchase declined",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deduct balance": {
+      "main": [
+        [
+          {
+            "node": "Log purchase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log purchase": {
+      "main": [
+        [
+          {
+            "node": "Respond purchase",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Cart",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Cart": {
+      "main": [
+        [
+          {
+            "node": "Create SALE_ITEMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create SALE_ITEMS": {
+      "main": [
+        [
+          {
+            "node": "Find MENU item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find MENU item": {
+      "main": [
+        [
+          {
+            "node": "Compute new stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute new stock": {
+      "main": [
+        [
+          {
+            "node": "Has stock row?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has stock row?": {
+      "main": [
+        [
+          {
+            "node": "Update MENU stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find account (enroll)": {
+      "main": [
+        [
+          {
+            "node": "Validate enroll",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate enroll": {
+      "main": [
+        [
+          {
+            "node": "Enroll OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enroll OK?": {
+      "main": [
+        [
+          {
+            "node": "Write RFID to account",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond enroll declined",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write RFID to account": {
+      "main": [
+        [
+          {
+            "node": "Respond enroll",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
