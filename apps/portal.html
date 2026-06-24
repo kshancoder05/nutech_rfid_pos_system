@@ -626,10 +626,6 @@ function renderRegister(){
   }));
 }
 function genUid(){ return Array.from({length:8},()=>"0123456789ABCDEF"[Math.floor(Math.random()*16)]).join(""); }
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 4c4a54db441bd8d0c3b9b2cdb3c37ab19930ae9a
 
 /* ============================ SHARED RFID READER ============================
    One reader, used by every card-tap point in the portal (currently Register).
@@ -719,11 +715,6 @@ const Face = (function(){
   return { ensureModels, startPreview, capture, stop, available:()=>typeof faceapi!=="undefined" };
 })();
 
-<<<<<<< HEAD
-=======
-=======
->>>>>>> 996be74dc6c493dfd5a390a519a691d03734a87c
->>>>>>> 4c4a54db441bd8d0c3b9b2cdb3c37ab19930ae9a
 function paintRegForm(){
   const el=$("#regForm"); if(!regRole){el.innerHTML="";return;}
   const idLabel = regRole==="Student"?"Student ID":regRole==="Personnel"?"Personnel ID":"Parent ID";
@@ -806,45 +797,6 @@ function paintRegForm(){
       btn.textContent="📷 Capture face"; toast("No face detected — center the face and try again");
     }
   });
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-  // Live mode: auto-arm the reader on the Register screen — just tap, no click needed.
-  if(!CONFIG.DEMO_MODE){
-    Reader.want(function fill(uid){ $("#rgRfid").value=uid; toast("Card read · "+uid); Reader.want(fill); });
-  }
-  $("#rgFace").addEventListener("click",async()=>{
-    const btn=$("#rgFace"), lbl=$("#rgFaceS"), cam=$("#rgCam");
-    if(!Face.available()){
-      lbl.textContent="library not loaded"; lbl.style.color="var(--rose)";
-      toast("Face library didn't load — connect to the internet, then reload the page"); return;
-    }
-    if(!Face._previewing){
-      // start the live camera
-      try{ btn.textContent="Starting…"; await Face.startPreview(cam); Face._previewing=true;
-        btn.textContent="📷 Capture face"; lbl.textContent="camera on"; lbl.style.color="var(--muted)";
-        toast("Line up the face, then tap Capture"); }
-      catch(e){ btn.textContent="Start camera"; lbl.textContent="camera blocked"; lbl.style.color="var(--rose)";
-        toast("Allow camera access (needs http://localhost or https)"); }
-      return;
-    }
-    // capture the descriptor
-    btn.textContent="Capturing…";
-    const desc=await Face.capture();
-    if(desc){
-      regCaps.face=desc; lbl.textContent="CAPTURED ✓"; lbl.style.color="var(--teal)";
-      Face.stop(); Face._previewing=false;
-      cam.innerHTML="<div style='color:#37d67a;font-weight:700;font-size:.95rem'>✓ Face captured</div>";
-      btn.textContent="Recapture"; toast("Face enrolled ✓");
-    }else{
-      btn.textContent="📷 Capture face"; toast("No face detected — center the face and try again");
-    }
-  });
-=======
-  $("#rgFp").addEventListener("click",()=>{ regCaps.fingerprint="FP-"+Date.now(); $("#rgFpS").textContent="captured ✓"; toast("Fingerprint captured"); });
-  $("#rgFace").addEventListener("click",()=>{ regCaps.face="FACE-"+Date.now(); $("#rgFaceS").textContent="captured ✓"; toast("Face captured"); });
->>>>>>> 996be74dc6c493dfd5a390a519a691d03734a87c
->>>>>>> 4c4a54db441bd8d0c3b9b2cdb3c37ab19930ae9a
   $("#rgSubmit").addEventListener("click",submitRegister);
 }
 async function submitRegister(){
