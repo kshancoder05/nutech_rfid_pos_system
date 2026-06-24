@@ -155,6 +155,7 @@
 </style>
 </head>
 <body>
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
 
 <!-- ===================== LOGIN ===================== -->
 <section id="login">
@@ -611,7 +612,7 @@ let regRole=null, regCaps={fingerprint:"",face:""};
 function renderRegister(){
   const m=$("#main");
   m.innerHTML=head("Register an account")+`
-   <p style="color:var(--muted);margin:-6px 2px 16px;font-size:.9rem">One account, both systems. Pick who you're registering, fill in their details, and capture their card and (optionally) biometrics — it's written to the shared ACCOUNT hub plus the matching role table.</p>
+   <p style="color:var(--muted);margin:-6px 2px 16px;font-size:.9rem">One account, both systems. Pick who you're registering, fill in their details, and capture their card and face — it's written to the shared ACCOUNT hub plus the matching role table.</p>
    <div class="roles" style="max-width:640px;grid-template-columns:repeat(3,1fr)">
      <button class="role" data-r="Student" aria-pressed="false"><div class="t">Student</div><div class="d">Wallet + attendance</div></button>
      <button class="role" data-r="Parent" aria-pressed="false"><div class="t">Parent</div><div class="d">Funds a child's wallet</div></button>
@@ -682,6 +683,38 @@ const Reader = (function(){
   return { want, cancel, connectArduino, autoReconnect, isConnected:()=>connected, mode:()=>CONFIG.RFID_SOURCE };
 })();
 
+/* ===================== FACE ENROLLMENT (face-api, same as gate) =====================
+   Captures the 128-float descriptor and returns it as a JSON string for FACE_BIO_ID.
+   The gate later does a 1:1 euclidean match against this. */
+const Face = (function(){
+  let modelsLoaded=false, stream=null, video=null;
+  async function ensureModels(){
+    if(modelsLoaded) return;
+    const M="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model";
+    await faceapi.nets.tinyFaceDetector.loadFromUri(M);
+    await faceapi.nets.faceLandmark68Net.loadFromUri(M);
+    await faceapi.nets.faceRecognitionNet.loadFromUri(M);
+    modelsLoaded=true;
+  }
+  async function startPreview(el){          // el = a container to show the live camera
+    video=document.createElement("video"); video.autoplay=true; video.muted=true; video.playsInline=true;
+    video.style.cssText="width:100%;border-radius:10px;transform:scaleX(-1)";
+    el.innerHTML=""; el.appendChild(video);
+    stream=await navigator.mediaDevices.getUserMedia({video:true});
+    video.srcObject=stream; await video.play();
+  }
+  function stop(){ if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; } }
+  async function capture(){                 // returns JSON string of 128 floats, or null
+    if(typeof faceapi==="undefined") return null;
+    await ensureModels();
+    if(!video) return null;
+    const det=await faceapi.detectSingleFace(video,new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+    if(!det) return null;
+    return JSON.stringify(Array.from(det.descriptor));   // -> ACCOUNT.FACE_BIO_ID
+  }
+  return { ensureModels, startPreview, capture, stop, available:()=>typeof faceapi!=="undefined" };
+})();
+
 function paintRegForm(){
   const el=$("#regForm"); if(!regRole){el.innerHTML="";return;}
   const idLabel = regRole==="Student"?"Student ID":regRole==="Personnel"?"Personnel ID":"Parent ID";
@@ -708,8 +741,15 @@ function paintRegForm(){
       <div style="margin-bottom:12px"><label>RFID card UID</label>
         <div style="display:flex;gap:8px"><input id="rgRfid" placeholder="tap card or type UID" style="flex:1">
         <button class="btn btn-ghost" id="rgTap" style="width:auto;white-space:nowrap;padding:0 16px">Tap</button></div></div>
-      <button class="btn btn-ghost" id="rgFp" style="display:none;width:100%;justify-content:space-between">Capture fingerprint <span id="rgFpS" style="color:var(--muted)">— optional —</span></button>
-      <button class="btn btn-ghost" id="rgFace" style="width:100%;justify-content:space-between;margin-top:8px">Capture face <span id="rgFaceS" style="color:var(--muted)">— optional —</span></button>
+      <div style="margin-top:6px;padding:12px;border:1px solid var(--line);border-radius:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <b style="font-size:.9rem">Face enrollment</b>
+          <span id="rgFaceS" style="font-size:.72rem;font-weight:700;color:var(--rose)">REQUIRED</span>
+        </div>
+        <div id="rgCam" style="background:#0f192e;border-radius:10px;aspect-ratio:4/3;display:grid;place-items:center;color:#6b7892;font-size:.82rem;overflow:hidden">Camera off</div>
+        <button class="btn btn-ghost" id="rgFace" style="width:100%;margin-top:8px">Start camera</button>
+        <p class="helper" style="margin-top:6px">Needed so the gate can match this face. Runs on http://localhost or https (Chrome/Edge).</p>
+      </div>
       <div style="margin-top:14px;margin-bottom:12px"><label>${regRole==="Personnel"?"Opening wallet (optional)":"Opening balance (₱)"}</label><input id="rgBalance" type="number" placeholder="0"></div>
       <button class="btn btn-primary" id="rgSubmit" style="width:100%">Register ${regRole}</button>
       <p style="color:var(--muted);font-size:.76rem;margin-top:8px">Creates the ACCOUNT (card + wallet + credentials) and the ${regRole} record together, under one shared ID — usable by both POS and attendance.</p>
@@ -730,14 +770,40 @@ function paintRegForm(){
   if(!CONFIG.DEMO_MODE){
     Reader.want(function fill(uid){ $("#rgRfid").value=uid; toast("Card read · "+uid); Reader.want(fill); });
   }
-  $("#rgFp").addEventListener("click",()=>{ regCaps.fingerprint="FP-"+Date.now(); $("#rgFpS").textContent="captured ✓"; toast("Fingerprint captured"); });
-  $("#rgFace").addEventListener("click",()=>{ regCaps.face="FACE-"+Date.now(); $("#rgFaceS").textContent="captured ✓"; toast("Face captured"); });
+  $("#rgFace").addEventListener("click",async()=>{
+    const btn=$("#rgFace"), lbl=$("#rgFaceS"), cam=$("#rgCam");
+    if(!Face.available()){
+      lbl.textContent="library not loaded"; lbl.style.color="var(--rose)";
+      toast("Face library didn't load — connect to the internet, then reload the page"); return;
+    }
+    if(!Face._previewing){
+      // start the live camera
+      try{ btn.textContent="Starting…"; await Face.startPreview(cam); Face._previewing=true;
+        btn.textContent="📷 Capture face"; lbl.textContent="camera on"; lbl.style.color="var(--muted)";
+        toast("Line up the face, then tap Capture"); }
+      catch(e){ btn.textContent="Start camera"; lbl.textContent="camera blocked"; lbl.style.color="var(--rose)";
+        toast("Allow camera access (needs http://localhost or https)"); }
+      return;
+    }
+    // capture the descriptor
+    btn.textContent="Capturing…";
+    const desc=await Face.capture();
+    if(desc){
+      regCaps.face=desc; lbl.textContent="CAPTURED ✓"; lbl.style.color="var(--teal)";
+      Face.stop(); Face._previewing=false;
+      cam.innerHTML="<div style='color:#37d67a;font-weight:700;font-size:.95rem'>✓ Face captured</div>";
+      btn.textContent="Recapture"; toast("Face enrolled ✓");
+    }else{
+      btn.textContent="📷 Capture face"; toast("No face detected — center the face and try again");
+    }
+  });
   $("#rgSubmit").addEventListener("click",submitRegister);
 }
 async function submitRegister(){
   const name=$("#rgName").value.trim(), id=$("#rgId").value.trim();
   if(!name){ toast("Enter a name"); return; }
   if(!id){ toast("Enter the "+regRole+" ID"); return; }
+  if(!regCaps.face){ toast("Capture the face first — it's required to enroll"); $("#rgFaceS")&&($("#rgFaceS").style.color="var(--rose)"); return; }
   const payload={ ownerType:regRole, ownerName:name, roleId:id,
     contact:$("#rgContact").value.trim(), email:$("#rgEmail").value.trim(), address:$("#rgAddress").value.trim(),
     rfid:$("#rgRfid").value.trim(), fingerprint:regCaps.fingerprint, face:regCaps.face,
@@ -753,8 +819,10 @@ async function submitRegister(){
     toast("Account created · "+r.accountId);
     ["rgName","rgId","rgContact","rgEmail","rgAddress","rgRfid","rgBalance","rgSection","rgSalary"].forEach(x=>{const e=$("#"+x);if(e)e.value="";});
     regCaps={fingerprint:"",face:""};
-    const fp=$("#rgFpS"); if(fp) fp.textContent="— optional —";
-    const fc=$("#rgFaceS"); if(fc) fc.textContent="— optional —";
+    Face.stop(); Face._previewing=false;
+    const cam=$("#rgCam"); if(cam) cam.innerHTML="Camera off";
+    const fc=$("#rgFaceS"); if(fc){ fc.textContent="REQUIRED"; fc.style.color="var(--rose)"; }
+    const fb=$("#rgFace"); if(fb) fb.textContent="Start camera";
     btn.disabled=false; btn.textContent="Register another "+regRole;
   } else { toast(r.reason||"Registration failed"); btn.disabled=false; btn.textContent="Register "+regRole; }
 }
